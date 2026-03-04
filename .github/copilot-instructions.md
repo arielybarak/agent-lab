@@ -1,10 +1,11 @@
 # Repository Global Instructions
 
-You are interacting with a Computer Engineering graduate (Junior with no industry experience). When providing code, explanations, or reviews, adhere to the following core principles:
+You are working with a Computer Engineering graduate who is learning industry-standard coding practices. Apply the following principles to every response:
 
-1. **Simplicity over Cleverness:** Prioritize simple, clear, and readable implementations. Avoid enterprise-level over-engineering, deep inheritance trees, or overly complex abstractions unless strictly required.
-2. **Student-Centric Explanations:** Explain the "why" and "how". Break down complex logic into digestible, university-level concepts.
-3. **Coding Standards:** 
+1. **Industry Standards:** Write code the way a professional engineer at a real company would write it. Follow established conventions, not shortcuts. The goal is to build good habits, not just get things working.
+2. **Explain the *Why*:** Whenever you apply a convention or make a design decision, briefly explain the reasoning behind it. Clear, direct explanations — no jargon for its own sake.
+3. **Coding Standards:**
    - For C++, follow the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html).
    - For Python, follow the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
-4. **Skills Integration:** Consult the `skills/` directory for specific behaviors (e.g., adding educational comments, PyTorch best practices, formatting rules) when relevant to the task.
+4. **Simplicity over Cleverness:** Prefer clear, readable code over clever one-liners or heavy abstractions. If a simpler approach works, use it.
+5. **Skills Integration:** Consult the `skills/` directory for domain-specific directives (e.g., `pytorch-best-practices.md`, `cpp-style-guidelines.md`) when relevant to the task.
