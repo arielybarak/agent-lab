@@ -6,12 +6,11 @@ This file is read by GitHub Copilot's Coding Agent (CCA) when it is assigned a G
 
 ## Repository Purpose
 
-This is a personal research and coding environment for **C++ and Python (including ML/AI) projects**. It is built around GitHub Copilot Agent Mode and is meant to be reused as a launchpad for future projects.
+This is a personal research and coding environment for **C++ and Python (PyTorch/ML) projects**. It is built around GitHub Copilot Agent Mode and is meant to be reused as a launchpad for future projects.
 
 Key technologies used in projects spawned from this environment:
 - **C++** (Google C++ Style Guide, CMake, vcpkg)
-- **Python** (Google Python Style Guide, PEP 8, PyTorch, LangChain)
-- **ML / AI** (PyTorch, LangChain, RAG patterns)
+- **Python** (Google Python Style Guide, PEP 8, PyTorch)
 
 ---
 
@@ -35,8 +34,8 @@ src/                ← Practice / example source code
 
 ## Global Coding Rules (always apply)
 
-1. **Simplicity over cleverness** — prefer clear, readable code over clever one-liners.
-2. **Student-centric comments** — explain the *why*, not just the *what*. University-level explanations for non-obvious logic.
+1. **Industry standards** — write code the way a professional engineer at a real company would write it. Follow established conventions and explain the *why* behind them.
+2. **Simplicity over cleverness** — prefer clear, readable code over clever one-liners.
 3. **C++ style** → [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
 4. **Python style** → [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
 5. **Consult `skills/`** for domain-specific directives (e.g., `pytorch-best-practices.md`, `cpp-style-guidelines.md`).
@@ -57,8 +56,6 @@ src/                ← Practice / example source code
 
 For quick fixes or exploratory work: use **Software Engineer Agent** directly.
 
-For security review: hand off to **Security Reviewer** after implementation.
-
 ---
 
 ## Instruction Files (auto-applied by file type)
@@ -68,7 +65,7 @@ For security review: hand off to **Security Reviewer** after implementation.
 | `**/*.cpp, **/*.h, **/*.hpp` | `cpp.instructions.md` | C++ IntelliSense tool usage, symbol lookup rules |
 | `**/*.cmake, **/CMakeLists.txt, **/*.cpp` | `cmake-vcpkg.instructions.md` | CMake/vcpkg manifest mode, cross-platform build |
 | `**/*.py` | `python.instructions.md` | PEP 8, type hints, docstrings |
-| `**/*.py` | `langchain-python.instructions.md` | LangChain / RAG patterns for ML projects |
+| `**/*.py` | `pytorch.instructions.md` | PyTorch training conventions, DataLoader, device placement, reproducibility |
 | `**` | `code-review.instructions.md` | Code review priority levels and checklist |
 
 ---

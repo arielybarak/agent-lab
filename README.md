@@ -81,7 +81,6 @@ Agents are organized into four categories. Use the pipeline diagram below to dec
 | **Implementer** | Takes an approved plan and implements it strictly. Enforces TDD (no code without a failing test first). The most structured coding agent — best when you have a clear plan. |
 | **Software Engineer Agent** | General-purpose, autonomous coding. No strict plan required. Best for exploratory work, refactors, or when you don't want to run the full pipeline. |
 | **Polyglot Test Generator** | Orchestrates comprehensive test generation via a Research-Plan-Implement pipeline. Works with any language — ideal for C++ (gtest) and Python (pytest). Use when you need to add or improve test coverage for an existing codebase. |
-| **Security Reviewer** | Reviews code for security vulnerabilities: OWASP Top 10, Zero Trust, and LLM/ML-specific threats. Creates a prioritized code-review report. Run after implementation, before merge. |
 | **Debug** | Diagnoses and fixes bugs systematically. Reproduces → Root cause → Fix → Verify. Use when something is broken and you want a methodical investigation. |
 | **Janitor** | Cleans up tech debt: removes dead code, unused imports, over-engineering, outdated comments. Run this after a feature is stable. |
 
@@ -103,25 +102,22 @@ Agents are organized into four categories. Use the pipeline diagram below to dec
 For well-defined features, chain agents in this order:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         FULL FEATURE PIPELINE                           │
-│                                                                         │
-│  1. task-researcher  ──►  2. plan  ──►  3. tdd-red                     │
-│                                              │                          │
-│                                              ▼                          │
-│                                       4. implementer                    │
-│                                              │                          │
-│                                    (if bugs) ▼                          │
-│                                         5. debug                        │
-│                                              │                          │
-│                                  (when stable) ▼                        │
-│                                         6. janitor                      │
-│                                              │                          │
-│                              (before merge) ▼                           │
-│                                   7. security-reviewer                  │
-│                                                                         │
-│   sensei / mentor / critical-thinking  ◄──  available at any stage      │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                    FULL FEATURE PIPELINE                         │
+│                                                                  │
+│  1. task-researcher  ──►  2. plan  ──►  3. tdd-red              │
+│                                              │                   │
+│                                              ▼                   │
+│                                       4. implementer             │
+│                                              │                   │
+│                                    (if bugs) ▼                   │
+│                                         5. debug                 │
+│                                              │                   │
+│                                  (when stable) ▼                 │
+│                                         6. janitor               │
+│                                                                  │
+│   sensei / mentor / critical-thinking  ◄──  available at any stage │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 For quick, exploratory work: skip straight to **Software Engineer Agent**.
@@ -154,7 +150,7 @@ Instructions live in `.github/instructions/` and are automatically applied by VS
 | `cpp.instructions.md` | `**/*.cpp, **/*.h, **/*.hpp` | Use C++ IntelliSense tools (GetSymbolInfo, GetSymbolReferences, CallHierarchy) over manual grep |
 | `cmake-vcpkg.instructions.md` | `**/*.cmake, **/CMakeLists.txt` | vcpkg manifest mode, CMakePresets, cross-platform (MSVC/Clang/GCC) |
 | `python.instructions.md` | `**/*.py` | PEP 8, type hints, PEP 257 docstrings, edge-case handling |
-| `langchain-python.instructions.md` | `**/*.py` | LangChain Runnable interface, RAG patterns, vector stores, LLM best practices |
+| `pytorch.instructions.md` | `**/*.py` | PyTorch training conventions: DataLoader, device placement, training loop, reproducibility |
 | `code-review.instructions.md` | `**` | Prioritized code-review checklist (Critical → Important → Suggestion) |
 
 > All instruction files were sourced from [github/awesome-copilot](https://github.com/github/awesome-copilot) and are kept verbatim for easy future updates.
@@ -165,7 +161,6 @@ Instructions live in `.github/instructions/` and are automatically applied by VS
 
 - **Start broad, then focus.** Use `Software Engineer Agent` to explore. Once you know the scope, switch to the full pipeline.
 - **The mentoring agents are for learning, not speed.** Use `Sensei`, `Mentor`, or `Critical Thinking` when you want to grow, not just get code.
-- **Security review before every merge.** Use `Security Reviewer` to catch OWASP / Zero Trust issues before pushing to main.
 - **CCA (Copilot Coding Agent)** — When assigning a GitHub Issue to Copilot, it reads `AGENTS.md` first. Keep that file up to date with your conventions.
 - **Agents ignore unknown tools gracefully.** If a tool isn't available (e.g., `runTests` without a test framework), it's silently skipped.
 - **Reload the window after editing agent files.** VS Code caches agent definitions on startup.
