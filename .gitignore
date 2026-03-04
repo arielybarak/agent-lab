@@ -1,0 +1,182 @@
+# =============================================================================
+# .gitignore for Agents Research and Coding Playground
+# Python, VSCode, OS artifacts, AI/agent experiment outputs
+# =============================================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.eggs/
+*.whl
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.env
+.python-version
+
+# Distribution / packaging
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+htmlcov/
+.pytest_cache/
+nosetests.xml
+test-results/
+junit*.xml
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# mypy / type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+pyrightconfig.json
+
+# --- Node / JavaScript (for any tooling scripts) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+
+# --- VSCode ---
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/*.code-workspace
+.vscode/extensions.json
+*.code-workspace
+
+# Keep agent/AI config but exclude user-specific VSCode files
+!.vscode/
+
+# --- OS artifacts ---
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+
+# --- AI / Agent experiment artifacts ---
+# Model weights and checkpoints
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.bin
+*.onnx
+*.pb
+
+# Large data files
+*.csv
+*.tsv
+*.parquet
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pkl
+*.pickle
+
+# Experiment outputs
+outputs/
+runs/
+wandb/
+mlruns/
+lightning_logs/
+checkpoints/
+artifacts/
+
+# Temporary agent working files
+tmp/
+temp/
+*.tmp
+*.temp
+tmp.md
+
+# Agent memory / session logs (local only)
+memory-bank/
+session-logs/
+audit-logs/
+*.audit.jsonl
+
+# --- Secrets and credentials (never commit these) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+secrets.yml
+secrets.yaml
+credentials.json
+
+# --- CMake / C++ build artifacts ---
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+build/
+out/
+
+# --- Logs ---
+*.log
+logs/
+
+# --- IDE / Editor ---
+.idea/
+*.swp
+*.swo
+.project
+.classpath
+.settings/

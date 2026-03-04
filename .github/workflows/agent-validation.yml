@@ -1,0 +1,183 @@
+# Agent file validation and automated PR review workflow.
+#
+# This workflow runs on every pull request and performs two jobs:
+#
+#   agent-diff-review — Detects changes to agent/instruction/skill files in the
+#                       PR diff and posts a structured review comment with a
+#                       governance checklist for the changed files.
+#
+#   workflow-lint     — Validates all GitHub Actions workflow YAML files using
+#                       actionlint to catch syntax errors and best-practice
+#                       violations before they reach the main branch.
+#
+# Security notes:
+#   - `pull-requests: write` is granted only to the job that posts review comments.
+#   - All actions are pinned to major version tags.
+#   - The GITHUB_TOKEN is used — no additional secrets required.
+
+name: Agent Validation & PR Review
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - ".github/agents/**"
+      - ".github/instructions/**"
+      - ".github/workflows/**"
+      - "skills/**"
+      - "hooks/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job: agent-diff-review
+  # Posts a governance checklist comment on the PR for any changed agent files.
+  # ---------------------------------------------------------------------------
+  agent-diff-review:
+    name: Agent Diff Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # Required to post review comments.
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Full history needed for accurate diff.
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Identify changed agent/skill/instruction files
+        id: changed_files
+        run: |
+          # Use the PR base commit SHA from the event for reliable diff.
+          git diff --name-only ${{ github.event.pull_request.base.sha }}...HEAD \
+            -- '.github/agents/**' '.github/instructions/**' 'skills/**' 'hooks/**' \
+            > /tmp/changed_agent_files.txt
+          echo "Changed files:"
+          cat /tmp/changed_agent_files.txt
+          echo "count=$(wc -l < /tmp/changed_agent_files.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Run governance audit on changed files
+        if: steps.changed_files.outputs.count != '0'
+        run: |
+          python hooks/governance-audit \
+            --path .github/agents \
+            --output /tmp/audit.jsonl \
+            --fail-on high
+
+      - name: Generate PR review comment
+        if: steps.changed_files.outputs.count != '0'
+        id: review_comment
+        run: |
+          python3 - <<'PYEOF'
+          import json
+          import os
+          from pathlib import Path
+
+          changed = Path("/tmp/changed_agent_files.txt").read_text().strip().splitlines()
+          audit_path = Path("/tmp/audit.jsonl")
+          violations = []
+          if audit_path.exists():
+              for line in audit_path.read_text().splitlines():
+                  if line.strip():
+                      violations.append(json.loads(line))
+
+          lines = [
+              "## 🤖 Agent File Review",
+              "",
+              f"**{len(changed)} file(s) changed** in this PR that affect agents, instructions, or skills.",
+              "",
+              "### Changed files",
+              "",
+          ]
+          for f in changed:
+              lines.append(f"- `{f}`")
+
+          lines += [
+              "",
+              "### Governance checklist",
+              "",
+              "Please verify the following before merging:",
+              "",
+              "- [ ] Agent front-matter includes `name`, `description`, and `tools`",
+              "- [ ] No wildcard tool allowlists (`allowed_tools: ['*']`)",
+              "- [ ] No hardcoded credentials or secrets",
+              "- [ ] Shell execution tools are explicitly blocklisted or governed",
+              "- [ ] High-impact tools require human approval",
+              "- [ ] Audit trail is enabled for any production agents",
+              "- [ ] Instructions files use `applyTo` to scope their applicability",
+              "- [ ] Skill files follow the `SKILL.md` naming convention",
+              "",
+          ]
+
+          if violations:
+              lines += [
+                  "### ⚠️ Governance audit findings",
+                  "",
+                  f"The governance-audit hook found **{len(violations)} violation(s)**:",
+                  "",
+              ]
+              for v in violations:
+                  lines.append(
+                      f"- `[{v['severity'].upper()}]` **{Path(v['file']).name}** "
+                      f"(line {v['line']}): {v['description']}"
+                  )
+          else:
+              lines.append("✅ Governance audit: **no violations found**")
+
+          comment = "\n".join(lines)
+          # Write to a file for the next step to read.
+          Path("/tmp/pr_comment.txt").write_text(comment)
+          print("Review comment generated.")
+          PYEOF
+
+      - name: Post review comment
+        if: steps.changed_files.outputs.count != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/pr_comment.txt', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body,
+            });
+
+  # ---------------------------------------------------------------------------
+  # Job: workflow-lint
+  # Validates GitHub Actions workflow YAML files using actionlint.
+  # ---------------------------------------------------------------------------
+  workflow-lint:
+    name: Lint Workflow Files (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install actionlint
+        run: |
+          # Download actionlint v1.7.3 release binary and verify checksum.
+          # Pin to a specific release tag to avoid supply chain risk.
+          ACTIONLINT_VERSION="1.7.3"
+          ACTIONLINT_SHA256="37252b4d440b56374b0df3f89454cddb19b3efcf4c47cd7c87c82e0f0c64d4e0"
+          curl -sSfL \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz" \
+            -o /tmp/actionlint.tar.gz
+          echo "${ACTIONLINT_SHA256}  /tmp/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/actionlint.tar.gz -C /usr/local/bin actionlint
+
+      - name: Lint workflow files
+        run: |
+          actionlint .github/workflows/*.yml
