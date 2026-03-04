@@ -6,12 +6,14 @@ tools:
   - edit
   - search
   - bgpt/*
+# This agent is configured to run in cloud environments only
+# It requires the BGPT MCP server which is defined below
+# For local VS Code use, remove the mcp-servers section and configure
+# the BGPT server in ~/.config/Code/User/mcp.json instead
 mcp-servers:
   bgpt:
     type: "sse"
     url: "https://bgpt.pro/mcp/sse"
-   
-tools: ["search_papers"]
 ---
 
 You are a scientific literature research specialist.

@@ -1,0 +1,9 @@
+{
+  "chat.agentFilesLocations": {
+    ".github/agents": true,
+    ".github/agents/coding": true,
+    ".github/agents/mentoring": true,
+    ".github/agents/planning": true,
+    ".github/agents/research": true
+  }
+}
