@@ -80,6 +80,8 @@ Agents are organized into four categories. Use the pipeline diagram below to dec
 | **TDD Red** | Write failing tests *first*, before any implementation exists. Follows a GitHub Issue to extract requirements and turns them into a `test_X fails as expected` report. Start here for new features. |
 | **Implementer** | Takes an approved plan and implements it strictly. Enforces TDD (no code without a failing test first). The most structured coding agent — best when you have a clear plan. |
 | **Software Engineer Agent** | General-purpose, autonomous coding. No strict plan required. Best for exploratory work, refactors, or when you don't want to run the full pipeline. |
+| **Polyglot Test Generator** | Orchestrates comprehensive test generation via a Research-Plan-Implement pipeline. Works with any language — ideal for C++ (gtest) and Python (pytest). Use when you need to add or improve test coverage for an existing codebase. |
+| **Security Reviewer** | Reviews code for security vulnerabilities: OWASP Top 10, Zero Trust, and LLM/ML-specific threats. Creates a prioritized code-review report. Run after implementation, before merge. |
 | **Debug** | Diagnoses and fixes bugs systematically. Reproduces → Root cause → Fix → Verify. Use when something is broken and you want a methodical investigation. |
 | **Janitor** | Cleans up tech debt: removes dead code, unused imports, over-engineering, outdated comments. Run this after a feature is stable. |
 
@@ -91,6 +93,7 @@ Agents are organized into four categories. Use the pipeline diagram below to dec
 | Agent | When to use |
 |---|---|
 | **Mentor** | Guides you to the right answer through Socratic questioning and hints. Best when you're stuck and want to learn, not just get an answer. |
+| **Sensei** | Socratic mentor for junior developers, using the PEAR Loop (Plan → Explore → Analyze → Rewrite). Never gives direct answers. Uses progressive clue levels so you reach the solution yourself. Sourced from [Awesome Copilot](https://github.com/github/awesome-copilot). |
 | **Critical Thinking** | Repeatedly asks "Why?" until it reaches the root of your assumption. Best when you feel confident but want a second opinion before committing to an approach. |
 
 ---
@@ -100,25 +103,30 @@ Agents are organized into four categories. Use the pipeline diagram below to dec
 For well-defined features, chain agents in this order:
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                    FULL FEATURE PIPELINE                         │
-│                                                                  │
-│  1. task-researcher  ──►  2. plan  ──►  3. tdd-red              │
-│                                              │                   │
-│                                              ▼                   │
-│                                       4. implementer             │
-│                                              │                   │
-│                                    (if bugs) ▼                   │
-│                                         5. debug                 │
-│                                              │                   │
-│                                  (when stable) ▼                 │
-│                                         6. janitor               │
-│                                                                  │
-│   mentor / critical-thinking  ◄──  available at any stage        │
-└──────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         FULL FEATURE PIPELINE                           │
+│                                                                         │
+│  1. task-researcher  ──►  2. plan  ──►  3. tdd-red                     │
+│                                              │                          │
+│                                              ▼                          │
+│                                       4. implementer                    │
+│                                              │                          │
+│                                    (if bugs) ▼                          │
+│                                         5. debug                        │
+│                                              │                          │
+│                                  (when stable) ▼                        │
+│                                         6. janitor                      │
+│                                              │                          │
+│                              (before merge) ▼                           │
+│                                   7. security-reviewer                  │
+│                                                                         │
+│   sensei / mentor / critical-thinking  ◄──  available at any stage      │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 For quick, exploratory work: skip straight to **Software Engineer Agent**.
+
+For test coverage: use **Polyglot Test Generator** on any existing codebase.
 
 ---
 
@@ -139,17 +147,30 @@ Skills are reusable instruction snippets stored in `skills/`. An agent can refer
 
 ## Instructions
 
-> **Coming soon.** This section will hold `.github/copilot-instructions.md` and language/task-specific instruction files that globally shape how Copilot responds across all agents.
+Instructions live in `.github/instructions/` and are automatically applied by VS Code based on file patterns — you don't need to load them manually.
+
+| Instruction file | Applies to | What it enforces |
+|---|---|---|
+| `cpp.instructions.md` | `**/*.cpp, **/*.h, **/*.hpp` | Use C++ IntelliSense tools (GetSymbolInfo, GetSymbolReferences, CallHierarchy) over manual grep |
+| `cmake-vcpkg.instructions.md` | `**/*.cmake, **/CMakeLists.txt` | vcpkg manifest mode, CMakePresets, cross-platform (MSVC/Clang/GCC) |
+| `python.instructions.md` | `**/*.py` | PEP 8, type hints, PEP 257 docstrings, edge-case handling |
+| `langchain-python.instructions.md` | `**/*.py` | LangChain Runnable interface, RAG patterns, vector stores, LLM best practices |
+| `code-review.instructions.md` | `**` | Prioritized code-review checklist (Critical → Important → Suggestion) |
+
+> All instruction files were sourced from [github/awesome-copilot](https://github.com/github/awesome-copilot) and are kept verbatim for easy future updates.
 
 ---
 
 ## Tips
 
 - **Start broad, then focus.** Use `Software Engineer Agent` to explore. Once you know the scope, switch to the full pipeline.
-- **The mentoring agents are for learning, not speed.** Use `Mentor` or `Critical Thinking` when you want to grow, not just get code.
+- **The mentoring agents are for learning, not speed.** Use `Sensei`, `Mentor`, or `Critical Thinking` when you want to grow, not just get code.
+- **Security review before every merge.** Use `Security Reviewer` to catch OWASP / Zero Trust issues before pushing to main.
+- **CCA (Copilot Coding Agent)** — When assigning a GitHub Issue to Copilot, it reads `AGENTS.md` first. Keep that file up to date with your conventions.
 - **Agents ignore unknown tools gracefully.** If a tool isn't available (e.g., `runTests` without a test framework), it's silently skipped.
 - **Reload the window after editing agent files.** VS Code caches agent definitions on startup.
 - **Check `.vscode/settings.json`** if you add a new agent subfolder — you'll need to register it under `chat.agentFilesLocations`.
+- **Instructions are applied automatically** for matching file types — no need to mention them in the chat.
 
 ---
 
@@ -158,5 +179,7 @@ Skills are reusable instruction snippets stored in `skills/`. An agent can refer
 - [GitHub Awesome Copilot](https://github.com/github/awesome-copilot)
 - [VS Code Custom Agents Docs](https://code.visualstudio.com/docs/copilot/customization/custom-agents)
 - [VS Code Agent Tools Reference](https://code.visualstudio.com/docs/copilot/agents/agent-tools)
+- [Copilot Coding Agent (CCA) Docs](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent)
 - [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
+- [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
 - [GeekAcademy 2026](https://geekacademy.co.il)
