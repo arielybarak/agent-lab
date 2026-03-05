@@ -1,0 +1,144 @@
+#!/usr/bin/env python3
+"""
+governance-audit hook
+
+Scans agent definition files (.agent.md) and governance policy YAML files
+for common safety anti-patterns, then emits a JSON Lines audit report.
+
+Usage:
+    python hooks/governance-audit [--output audit.jsonl] [--path .github/agents]
+
+Exit codes:
+    0 - no violations found
+    1 - violations found (review the output report)
+"""
+
+import argparse
+import json
+import re
+import sys
+import time
+from pathlib import Path
+
+# Patterns that indicate a governance anti-pattern in agent/policy files.
+# Each entry is (regex, severity, description).
+ANTI_PATTERNS: list[tuple[str, str, str]] = [
+    (
+        r'allowed_tools\s*:\s*\[\s*["\']\*["\']\s*\]',
+        "critical",
+        "Wildcard tool allowlist — agents must have an explicit allowlist, not '*'",
+    ),
+    (
+        r'(?i)hardcoded.*(password|secret|api.?key)',
+        "critical",
+        "Potential hardcoded credential detected in agent file",
+    ),
+    (
+        r'(?i)(shell_exec|subprocess\.call|os\.system)',
+        "high",
+        "Unrestricted shell execution — wrap in governance decorator or blocklist",
+    ),
+    (
+        r'(?i)max_calls_per_request\s*:\s*0',
+        "high",
+        "Rate limit set to 0 (unlimited) — set a reasonable upper bound",
+    ),
+    (
+        r'(?i)require_human_approval\s*:\s*\[\s*\]',
+        "medium",
+        "No tools require human approval — consider adding high-impact tools",
+    ),
+    (
+        r'(?i)audit.*disabled|no.?audit',
+        "high",
+        "Audit trail appears disabled — audit must always be enabled in production",
+    ),
+]
+
+
+def scan_file(path: Path) -> list[dict]:
+    """Return a list of violation dicts for the given file."""
+    violations = []
+    text = path.read_text(encoding="utf-8")
+    for pattern, severity, description in ANTI_PATTERNS:
+        for match in re.finditer(pattern, text):
+            line_number = text[: match.start()].count("\n") + 1
+            violations.append(
+                {
+                    "timestamp": time.time(),
+                    "file": str(path),
+                    "line": line_number,
+                    "severity": severity,
+                    "pattern": pattern,
+                    "description": description,
+                    "evidence": match.group(),
+                }
+            )
+    return violations
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Agent governance audit hook")
+    parser.add_argument(
+        "--path",
+        default=".github/agents",
+        help="Directory to scan (default: .github/agents)",
+    )
+    parser.add_argument(
+        "--output",
+        default="audit.jsonl",
+        help="Output JSON Lines file (default: audit.jsonl)",
+    )
+    parser.add_argument(
+        "--fail-on",
+        choices=["critical", "high", "medium", "all"],
+        default="critical",
+        help="Exit code 1 when violations of this severity or above are found",
+    )
+    args = parser.parse_args()
+
+    scan_root = Path(args.path)
+    if not scan_root.exists():
+        print(f"[governance-audit] Path not found: {scan_root}", file=sys.stderr)
+        return 0  # Nothing to scan is not an error
+
+    severity_order = {"medium": 0, "high": 1, "critical": 2, "all": -1}
+    threshold = severity_order.get(args.fail_on, 2)
+
+    all_violations: list[dict] = []
+    for agent_file in scan_root.rglob("*.md"):
+        all_violations.extend(scan_file(agent_file))
+
+    # Also scan governance YAML files if present
+    for policy_file in Path(".").rglob("governance-policy.yaml"):
+        all_violations.extend(scan_file(policy_file))
+
+    # Write report
+    output_path = Path(args.output)
+    with output_path.open("w", encoding="utf-8") as f:
+        for v in all_violations:
+            f.write(json.dumps(v) + "\n")
+
+    if all_violations:
+        print(
+            f"[governance-audit] {len(all_violations)} violation(s) found. "
+            f"See {output_path} for details.",
+            file=sys.stderr,
+        )
+        for v in all_violations:
+            print(
+                f"  [{v['severity'].upper()}] {v['file']}:{v['line']} — {v['description']}",
+                file=sys.stderr,
+            )
+    else:
+        print("[governance-audit] No violations found.", file=sys.stderr)
+
+    # Determine exit code
+    should_fail = any(
+        severity_order.get(v["severity"], 0) >= threshold for v in all_violations
+    )
+    return 1 if should_fail else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
