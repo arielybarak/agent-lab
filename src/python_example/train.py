@@ -27,8 +27,23 @@ def main():
     inputs = torch.randn(16, 10).to(device)
     targets = torch.randn(16, 1).to(device)
 
-    # TODO: Implement simple training loop here
-    pass
+    num_epochs = 3
+
+    # Intentional: reuse the same dummy batch each epoch to keep the example minimal.
+    # In a real pipeline, use a DataLoader to iterate over the full dataset each epoch.
+    model.train()  # Enable dropout / batch norm training mode
+    for epoch in range(num_epochs):
+        optimizer.zero_grad(set_to_none=True)  # Reset gradients for this iteration
+
+        # Forward pass
+        # outputs shape: (batch_size, 1)
+        outputs = model(inputs)
+        loss = criterion(outputs, targets)
+
+        loss.backward()   # Compute gradients
+        optimizer.step()  # Update weights
+
+        print(f"Epoch [{epoch + 1}/{num_epochs}]  Loss: {loss.item():.4f}")
 
 if __name__ == "__main__":
     main()
