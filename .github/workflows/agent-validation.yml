@@ -1,0 +1,14 @@
+  # Download and verify actionlint
+  - name: Install actionlint
+    run: |
+      ACTIONLINT_VERSION=1.7.3
+      LATEST_RELEASE=$(curl -s https://api.github.com/repos/actionlint/actionlint/releases/latest)
+      DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | jq -r '.assets[] | select(.name | test("^actionlint-linux-amd64")) | .browser_download_url')
+      CHECKSUM_URL=$(echo "$LATEST_RELEASE" | jq -r '.assets[] | select(.name | test("checksums.txt")) | .browser_download_url')
+
+      curl -s -L "$CHECKSUM_URL" -o checksums.txt
+      curl -s -L "$DOWNLOAD_URL" -o actionlint.tar.gz
+      sha256sum -c <(grep "actionlint-linux-amd64" checksums.txt)
+      tar -xzf actionlint.tar.gz
+      chmod +x actionlint
+      mv actionlint /usr/local/bin/actionlint
