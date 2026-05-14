@@ -5,5 +5,8 @@
     ".github/agents/mentoring": true,
     ".github/agents/planning": true,
     ".github/agents/research": true
-  }
+  },
+  "platformio-ide.useBuiltinPIOCore": false,
+  "platformio-ide.useBuiltinPython": false,
+  "platformio-ide.customPATH": "/home/barak/.platformio/penv/bin"
 }

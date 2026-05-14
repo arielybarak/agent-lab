@@ -39,12 +39,17 @@ Focus on writing clear, specific failing tests that describe the desired behavio
 - **Single assertion focus** - Each test should verify one specific outcome from issue criteria
 - **Edge cases first** - Consider boundary conditions mentioned in issue discussions
 
-### C# Test Patterns
+### Test Framework Patterns
 
-- Use **xUnit** with **FluentAssertions** for readable assertions
-- Apply **AutoFixture** for test data generation
-- Implement **Theory tests** for multiple input scenarios from issue examples
-- Create **custom assertions** for domain-specific validations outlined in issue
+Detect the project's language and testing framework before writing any tests. Use the appropriate tooling per language:
+
+- **Python**: Use **pytest** with `assert` statements. Use `pytest.mark.parametrize` for multiple input scenarios. Use `unittest.mock` or `pytest-mock` for mocking. Name tests `test_<behavior>_when_<condition>`.
+- **JavaScript/TypeScript**: Use **Jest** or **Vitest** with `expect().toBe()` / `expect().toEqual()`. Use `describe`/`it` blocks, `jest.fn()` for mocks.
+- **Java**: Use **JUnit 5** with **AssertJ**. Apply `@ParameterizedTest` for multiple inputs.
+- **C#**: Use **xUnit** with **FluentAssertions**. Apply **AutoFixture** for test data. Use `[Theory]` for parameterised cases.
+- **Go**: Use the standard `testing` package with table-driven tests.
+
+**Framework detection order**: check existing test files → check `pyproject.toml`/`package.json`/`pom.xml`/`*.csproj` → ask the user if still unclear.
 
 ## Execution Guidelines
 
