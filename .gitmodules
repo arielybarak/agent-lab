@@ -1,0 +1,3 @@
+[submodule "sdd-workshop"]
+	path = sdd-workshop
+	url = https://github.com/094459/sdd-workshop.git
