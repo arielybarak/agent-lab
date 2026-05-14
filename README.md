@@ -1,4 +1,4 @@
-# Agents Playground
+# Agents Sendbox
 
 A personal sandbox for practicing **GitHub Copilot Agent Mode** and AI-assisted development workflows, used alongside the [GeekAcademy 2026](https://geekacademy.co.il) program.
 
@@ -33,8 +33,8 @@ When you switch to an agent in the Chat view, every message you send is automati
 
 ### 1. Open the repo in VS Code
 ```bash
-git clone https://github.com/arielybarak/agents_playground
-cd agents_playground
+git clone https://github.com/arielybarak/agents_sendbox
+cd agents_sendbox
 code .
 ```
 

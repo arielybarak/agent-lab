@@ -74,12 +74,12 @@ For quick fixes or exploratory work: use **Software Engineer Agent** directly.
 
 Load these when the task calls for it:
 
-| Skill file | When to load |
-|---|---|
+| Skill file                           | When to load                          |
+|--------------------------------------|--- -----------------------------------|
 | `skills/add-educational-comments.md` | Any code generation that should teach |
-| `skills/cpp-style-guidelines.md` | C++ code generation or review |
-| `skills/python-style-guidelines.md` | Python code generation or review |
-| `skills/pytorch-best-practices.md` | PyTorch / deep learning code |
+| `skills/cpp-style-guidelines.md`     | C++ code generation or review         |
+| `skills/python-style-guidelines.md`  | Python code generation or review      |
+| `skills/pytorch-best-practices.md`   | PyTorch / deep learning code          |
 
 ---
 
