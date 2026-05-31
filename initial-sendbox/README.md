@@ -1,171 +1,152 @@
-# Agents Sendbox
+# initial-sendbox
 
-A personal sandbox for practicing **GitHub Copilot Agent Mode** and AI-assisted development workflows, used alongside the [GeekAcademy 2026](https://geekacademy.co.il) program.
+My **first AI-agent setup** — a sandbox built around **GitHub Copilot Agent Mode** for
+practicing AI-assisted development, alongside the [GeekAcademy 2026](https://geekacademy.co.il)
+program. It now lives as one folder inside the [`agents_sendbox`](../README.md) hub: the
+baseline that the eventual "perfect setup" will improve on.
 
----
-
-## What Is This Repo?
-
-This repository is a curated collection of:
-
-| Folder | Purpose |
-|---|---|
-| `.github/agents/` | Custom Copilot agents — each one configures a different AI persona |
-| `skills/` | Reusable instruction snippets that agents can load on demand |
-| `src/` | Practice code to experiment on |
-
-You don't "run" this repo — you open it in VS Code and use it as a launchpad for AI-powered workflows.
+You don't "run" this — you open it in VS Code and use it as a launchpad for AI-powered
+workflows. The `test-project/` subfolder is a small Python package used to exercise the
+agents end-to-end.
 
 ---
 
-## How Copilot Agents Work (Quick Concept)
-
-Think of a **Copilot agent** as a specialist you can hire for a specific job. Each agent is defined by:
-
-1. **A system prompt** — tells the AI how to behave (e.g., "you are a strict TDD enforcer")
-2. **A tool list** — controls what actions it can take (read files, run terminal, search web, etc.)
-
-When you switch to an agent in the Chat view, every message you send is automatically framed by that agent's context. You get a focused, role-specific assistant without having to re-explain your rules every time.
-
----
-
-## Setup
-
-### 1. Open the repo in VS Code
-```bash
-git clone https://github.com/arielybarak/agents_sendbox
-cd agents_sendbox
-code .
-```
-
-### 2. Open the Chat view
-Press `Ctrl+Alt+I` to open the Copilot Chat panel.
-
-### 3. Pick an agent
-Click the agent dropdown (shows "Agent / Ask / Plan" by default) and select any agent from the list below.
-
-> **Why can't I see all agents?**  
-> VS Code only scans `.github/agents/` root by default. This repo's `.vscode/settings.json` already adds the subdirectories — just reload the window once (`Ctrl+Shift+P` → "Developer: Reload Window").
-
----
-
-## Agent Catalog
-
-Agents are organized into four categories. Use the pipeline diagram below to decide which one to start with.
-
-### Research
-> Use these **before you write a single line of code**, to understand the problem deeply.
-
-| Agent | When to use |
-|---|---|
-| **Task Researcher** | Deep-dive into your own codebase or external sources to produce a structured research document before planning. Best for "I need to understand X before I touch it." |
-| **Scientific Paper Research** | Search biomedical/scientific literature. Powered by the BGPT MCP server. Best for evidence-based feature validation or health-tech projects. |
-
----
-
-### Planning
-> Use these **after research, before coding**. No code changes are made — only plans.
-
-| Agent | When to use |
-|---|---|
-| **Plan** | Creates a detailed, step-by-step implementation plan from your requirements. Reads your codebase first, asks clarifying questions, then outputs a concrete plan. Hand the plan to an implementer agent when done. |
-
----
-
-### Coding
-> Use these **to actually write, fix, or improve code**.
-
-| Agent | When to use |
-|---|---|
-| **TDD Red** | Write failing tests *first*, before any implementation exists. Follows a GitHub Issue to extract requirements and turns them into a `test_X fails as expected` report. Start here for new features. |
-| **Implementer** | Takes an approved plan and implements it strictly. Enforces TDD (no code without a failing test first). The most structured coding agent — best when you have a clear plan. |
-| **Software Engineer Agent** | General-purpose, autonomous coding. No strict plan required. Best for exploratory work, refactors, or when you don't want to run the full pipeline. |
-| **Polyglot Test Generator** | Orchestrates comprehensive test generation via a Research-Plan-Implement pipeline. Works with any language — ideal for C++ (gtest) and Python (pytest). Use when you need to add or improve test coverage for an existing codebase. |
-| **Debug** | Diagnoses and fixes bugs systematically. Reproduces → Root cause → Fix → Verify. Use when something is broken and you want a methodical investigation. |
-| **Janitor** | Cleans up tech debt: removes dead code, unused imports, over-engineering, outdated comments. Run this after a feature is stable. |
-
----
-
-### Mentoring
-> These agents **never edit code** — they only challenge your thinking.
-
-| Agent | When to use |
-|---|---|
-| **Mentor** | Guides you to the right answer through Socratic questioning and hints. Best when you're stuck and want to learn, not just get an answer. |
-| **Sensei** | Socratic mentor for junior developers, using the PEAR Loop (Plan → Explore → Analyze → Rewrite). Never gives direct answers. Uses progressive clue levels so you reach the solution yourself. Sourced from [Awesome Copilot](https://github.com/github/awesome-copilot). |
-| **Critical Thinking** | Repeatedly asks "Why?" until it reaches the root of your assumption. Best when you feel confident but want a second opinion before committing to an approach. |
-
----
-
-## The Development Pipeline
-
-For well-defined features, chain agents in this order:
+## Layout
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                    FULL FEATURE PIPELINE                         │
-│                                                                  │
-│  1. task-researcher  ──►  2. plan  ──►  3. tdd-red              │
-│                                              │                   │
-│                                              ▼                   │
-│                                       4. implementer             │
-│                                              │                   │
-│                                    (if bugs) ▼                   │
-│                                         5. debug                 │
-│                                              │                   │
-│                                  (when stable) ▼                 │
-│                                         6. janitor               │
-│                                                                  │
-│   sensei / mentor / critical-thinking  ◄──  available at any stage │
-└──────────────────────────────────────────────────────────────────┘
+.github/
+  agents/           ← Custom Copilot agent definitions (.agent.md), grouped by role
+    coding/         ← write, fix, test, clean code
+    mentoring/      ← guide learning (never edit code)
+    planning/       ← produce plans, not code
+    research/       ← research before coding
+  instructions/     ← auto-applied coding standards, matched by file pattern
+  prompts/          ← reusable prompt files for common workflows
+  workflows/        ← GitHub Actions (CI + agent validation)
+  copilot-instructions.md  ← global instructions applied to every Copilot session
+skills/             ← reusable instruction snippets (loaded on demand)
+hooks/              ← lifecycle automation (logging, auto-commit, governance audit)
+src/                ← practice / scratch source code
+test-project/       ← a small Python package used to test the agent pipeline
+AGENTS.md           ← guide read by Copilot's Coding Agent (CCA) on assigned issues
+CONTEXT.md          ← repo purpose & course-topic context for Copilot
 ```
 
-For quick, exploratory work: skip straight to **Software Engineer Agent**.
+---
 
-For test coverage: use **Polyglot Test Generator** on any existing codebase.
+## Agent catalog
+
+Agents are defined in `.github/agents/` and grouped by role. Chain them for well-defined
+features; jump straight to a coding agent for quick exploration.
+
+### Research — understand before writing code
+| Agent | When to use |
+|---|---|
+| **task-researcher** | Deep-dive your codebase or external sources into a structured research doc before planning. |
+| **analyst** | General analysis of a problem space or codebase. |
+| **scientific-paper-research** | Search biomedical/scientific literature (BGPT MCP server). Best for evidence-based or health-tech work. |
+
+### Planning — no code changes, only plans
+| Agent | When to use |
+|---|---|
+| **plan** | Detailed, step-by-step implementation plan from requirements; reads the codebase, asks clarifying questions. |
+| **planner** | Lighter-weight planning pass. |
+| **prd** | Produce a product-requirements document before scoping work. |
+
+### Coding — write, fix, improve
+| Agent | When to use |
+|---|---|
+| **tdd-red** | Write failing tests *first* from a GitHub Issue's requirements. Start here for new features. |
+| **implementer** | Implements an approved plan strictly; enforces TDD (no code without a failing test). |
+| **software-engineer-agent-v1** | General-purpose autonomous coding; no strict plan needed. Best for exploration/refactors. |
+| **polyglot-test-generator** | Research→Plan→Implement pipeline for comprehensive tests (C++ gtest, Python pytest, …). |
+| **debug** | Methodical bug fixing: reproduce → root cause → fix → verify. |
+| **janitor** | Clean up tech debt: dead code, unused imports, over-engineering, stale comments. |
+| **code-reviewer** | Prioritized review pass (Critical → Important → Suggestion). |
+
+### Mentoring — never edit code, only challenge your thinking
+| Agent | When to use |
+|---|---|
+| **mentor** | Socratic questioning and hints when you're stuck and want to learn. |
+| **sensei** | Socratic mentor for juniors using the PEAR Loop (Plan → Explore → Analyze → Rewrite). |
+| **critical-thinking** | Repeatedly asks "Why?" to surface hidden assumptions before you commit. |
+
+**Suggested pipeline:** task-researcher → plan → tdd-red → implementer → (debug) → (janitor),
+with mentoring agents available at any stage. For quick work, skip to software-engineer-agent-v1.
 
 ---
 
 ## Skills
 
-Skills are reusable instruction snippets stored in `skills/`. An agent can reference a skill to load specific behavior on demand — for example, loading `add-educational-comments.md` to get detailed inline explanations in generated code.
+Reusable instruction snippets in `skills/`, loaded on demand. Single-file skills are `.md`;
+richer ones are a folder with a `SKILL.md`.
 
-| Skill file | What it does |
+| Skill | What it does |
 |---|---|
-| `add-educational-comments.md` | Adds university-level explanatory comments to generated code |
-| `cpp-style-guidelines.md` | Enforces Google C++ Style Guide |
-| `python-style-guidelines.md` | Enforces Google Python Style Guide |
+| `add-educational-comments.md` | University-level explanatory comments in generated code |
+| `cpp-style-guidelines.md` | Enforces the Google C++ Style Guide |
+| `python-style-guidelines.md` | Enforces the Google Python Style Guide |
 | `pytorch-best-practices.md` | PyTorch-specific patterns and conventions |
-
-> **Planned:** Agents will be wired up to auto-load relevant skills based on the task type.
+| `agent-governance/` | Governance rules for agent behavior |
+| `agentic-eval/` | Evaluating agent outputs |
+| `prd/` | Producing a product-requirements document |
 
 ---
 
 ## Instructions
 
-Instructions live in `.github/instructions/` and are automatically applied by VS Code based on file patterns — you don't need to load them manually.
+Files in `.github/instructions/` are applied automatically by VS Code based on file
+patterns — no need to mention them in chat.
 
-| Instruction file | Applies to | What it enforces |
-|---|---|---|
-| `cpp.instructions.md` | `**/*.cpp, **/*.h, **/*.hpp` | Use C++ IntelliSense tools (GetSymbolInfo, GetSymbolReferences, CallHierarchy) over manual grep |
-| `cmake-vcpkg.instructions.md` | `**/*.cmake, **/CMakeLists.txt` | vcpkg manifest mode, CMakePresets, cross-platform (MSVC/Clang/GCC) |
-| `python.instructions.md` | `**/*.py` | PEP 8, type hints, PEP 257 docstrings, edge-case handling |
-| `pytorch.instructions.md` | `**/*.py` | PyTorch training conventions: DataLoader, device placement, training loop, reproducibility |
-| `code-review.instructions.md` | `**` | Prioritized code-review checklist (Critical → Important → Suggestion) |
+| Instruction file | Enforces |
+|---|---|
+| `cpp.instructions.md` | C++ IntelliSense tooling over manual grep |
+| `cmake-vcpkg.instructions.md` | vcpkg manifest mode, CMakePresets, cross-platform builds |
+| `python.instructions.md` | PEP 8, type hints, PEP 257 docstrings, edge cases |
+| `pytorch.instructions.md` | PyTorch training conventions (DataLoader, device, reproducibility) |
+| `code-review.instructions.md` | Prioritized code-review checklist |
+| `agent-safety.instructions.md` | Safety guardrails for agent actions |
+| `context-engineering.instructions.md` | How to assemble and manage context |
+| `memory-bank.instructions.md` | Persistent memory conventions |
+| `github-actions-ci-cd-best-practices.instructions.md` | CI/CD workflow best practices |
 
-> All instruction files were sourced from [github/awesome-copilot](https://github.com/github/awesome-copilot) and are kept verbatim for easy future updates.
+> Most instruction files were sourced from [github/awesome-copilot](https://github.com/github/awesome-copilot) and kept close to verbatim for easy updates.
+
+---
+
+## Hooks
+
+Lifecycle automation in `hooks/` (see `hooks/README.md` for details):
+
+| Hook | Purpose |
+|---|---|
+| `session-logger/` | Log agent sessions |
+| `session-auto-commit/` | Auto-commit work during a session |
+| `governance-audit/` | Audit agent actions against governance rules |
+
+---
+
+## Setup
+
+```bash
+# from the agents_sendbox hub root
+code initial-sendbox
+```
+1. Open the Copilot Chat panel (`Ctrl+Alt+I`).
+2. Pick an agent from the dropdown. If some don't appear, reload the window
+   (`Ctrl+Shift+P` → "Developer: Reload Window") — `.vscode/settings.json` registers the
+   agent subfolders under `chat.agentFilesLocations`.
 
 ---
 
 ## Tips
 
-- **Start broad, then focus.** Use `Software Engineer Agent` to explore. Once you know the scope, switch to the full pipeline.
-- **The mentoring agents are for learning, not speed.** Use `Sensei`, `Mentor`, or `Critical Thinking` when you want to grow, not just get code.
-- **CCA (Copilot Coding Agent)** — When assigning a GitHub Issue to Copilot, it reads `AGENTS.md` first. Keep that file up to date with your conventions.
-- **Agents ignore unknown tools gracefully.** If a tool isn't available (e.g., `runTests` without a test framework), it's silently skipped.
-- **Reload the window after editing agent files.** VS Code caches agent definitions on startup.
-- **Check `.vscode/settings.json`** if you add a new agent subfolder — you'll need to register it under `chat.agentFilesLocations`.
-- **Instructions are applied automatically** for matching file types — no need to mention them in the chat.
+- **Start broad, then focus.** Explore with `software-engineer-agent-v1`, then switch to the full pipeline.
+- **Mentoring agents are for learning, not speed.** Use them when you want to grow.
+- **CCA reads `AGENTS.md` first** when you assign a GitHub Issue to Copilot — keep it current.
+- **Reload the window after editing agent files** — VS Code caches them on startup.
+- **Register new agent subfolders** in `.vscode/settings.json`.
+- **Instructions apply automatically** for matching file types — no need to mention them.
 
 ---
 
@@ -173,8 +154,6 @@ Instructions live in `.github/instructions/` and are automatically applied by VS
 
 - [GitHub Awesome Copilot](https://github.com/github/awesome-copilot)
 - [VS Code Custom Agents Docs](https://code.visualstudio.com/docs/copilot/customization/custom-agents)
-- [VS Code Agent Tools Reference](https://code.visualstudio.com/docs/copilot/agents/agent-tools)
 - [Copilot Coding Agent (CCA) Docs](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent)
-- [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
-- [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
+- [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) · [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
 - [GeekAcademy 2026](https://geekacademy.co.il)

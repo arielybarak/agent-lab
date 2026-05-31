@@ -1,3 +1,12 @@
 [submodule "sdd-workshop"]
-	path = sdd-workshop
+	path = references/sdd-workshop
 	url = https://github.com/094459/sdd-workshop.git
+[submodule "references/ideal-project-scaffolder"]
+	path = references/ideal-project-scaffolder
+	url = https://github.com/yitzhak-shaked/ideal-project-scaffolder.git
+[submodule "references/mattpocock-skills"]
+	path = references/mattpocock-skills
+	url = https://github.com/mattpocock/skills.git
+[submodule "references/caveman"]
+	path = references/caveman
+	url = https://github.com/JuliusBrussee/caveman.git
