@@ -1,0 +1,11 @@
+# Python byproducts (from tools/ and the .claude hooks)
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Editor / OS noise
+.DS_Store
+*.swp
+
+# Per-repo Claude Code setups (generated output, installed into target repos)
+meta-env-setup/claude-setups/

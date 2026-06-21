@@ -6,15 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `agents_sendbox` is a **collection hub**, not an application. It gathers AI-agent tooling
 (skills, plugins, project templates, workshops) to study and remix, with the long-term goal
-of assembling one "perfect" agent setup for new projects. Two kinds of content live here:
+of assembling one "perfect" agent setup for new projects. Three kinds of content live here:
 
 - **`references/`** — external repos pulled in as **git submodules** (other people's work:
   `caveman`, `mattpocock-skills`, `ideal-project-scaffolder`, `sdd-workshop`). Treat these as
   read-only upstreams — do **not** edit files inside them; changes belong upstream. See
   `references/README.md` for what each one is and what's worth borrowing.
-- **`initial-sendbox/`** — the only first-party project: a GitHub Copilot Agent Mode setup
+- **`initial-sendbox/`** — a first-party project: a GitHub Copilot Agent Mode setup
   (custom agents, skills, hooks, instructions) plus a small Python package used to exercise it.
-  This is where actual editable work lives.
+- **`meta-env-setup/`** — first-party **Claude Code** tooling gathered into one self-contained,
+  shareable kit: a scaffolder + validator/auditor, the method skills, ready-to-install `.claude`
+  setups for *other* repos, and an effectiveness-eval harness. See "First-party Claude Code
+  tooling" below.
 
 Because the references are submodules, after cloning run
 `git submodule update --init --recursive` (or clone with `--recurse-submodules`). Update one
@@ -42,6 +45,40 @@ runtime you launch:
   purpose is to give the agent pipeline a real, end-to-end target to operate on.
 - **`AGENTS.md`** / **`CONTEXT.md`** — read both before agent work in this folder; `CONTEXT.md`
   states the learning intent, `AGENTS.md` is what Copilot's Coding Agent reads on an assigned issue.
+
+## First-party Claude Code tooling — `meta-env-setup/`
+
+Where `initial-sendbox/` targets **GitHub Copilot**, this layer targets **Claude Code**. It is a
+**self-contained, shareable kit** for *building and evaluating* `.claude/` setups, gathered under
+one folder. **Run its commands from inside `meta-env-setup/`** (`cd meta-env-setup`) — every path
+below is relative to that folder. See `meta-env-setup/README.md` for the overview.
+
+- **`tools/`** — stdlib-only `scaffold_claude_setup.py` (bootstraps a `.claude/` skeleton, adds
+  skills/commands/agents) and `validate_claude_setup.py` (CI-style structure check + three
+  advisory **effectiveness** modes — `--score` static audit, `--route` routing tests, `--ablate`
+  ablation; only the default gate fails CI). See `tools/README.md`.
+- **`evals/`** — methodology + per-repo eval data (task suites, routing tests) for the effectiveness
+  modes; tracked because `claude-setups/` is gitignored. See `evals/README.md`.
+- **`.claude/skills/`** — the kit's method skills (they auto-activate when you work inside the
+  kit): `claude-setup-scaffolder` (the whole pipeline), a kit-native measured `skill-creator-lite`
+  (author one skill, sharpened against `--score`), and `hook-design` (design an effective hook).
+  The repo-root `skills/skill-creator` is the heavier official Anthropic skill-creator
+  (behavioral eval — runs real Claude with/without the skill), kept as a reference upstream.
+- **`.claude/`** — the kit's *own* Claude Code setup: the `/new-claude-setup` and
+  `/audit-claude-setup` commands plus the read-only `setup-analyzer` agent. Because it now lives
+  here, those commands auto-load only when you work from inside `meta-env-setup/`. (Its
+  `settings.json` ships with empty permissions on purpose — add your own.)
+- **`claude-setups/<repo>/`** — complete `.claude` setups authored here for *other* repos
+  (currently `DL-Project`, `project-VLSI`, `Integrated_HWSW`, and `System_Design_SelfLearn`),
+  each with a dry-run-by-default `install.sh`. Never written into the real repos automatically;
+  gitignored. See `claude-setups/README.md`.
+
+Validate + score every setup (and the kit's own), from inside `meta-env-setup/`:
+```bash
+cd meta-env-setup
+python tools/validate_claude_setup.py claude-setups/*/ .            # structural gate
+python tools/validate_claude_setup.py claude-setups/*/ . --score    # + effectiveness/minimality score
+```
 
 ## Common commands
 

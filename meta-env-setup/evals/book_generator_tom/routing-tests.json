@@ -1,0 +1,51 @@
+{
+  "_comment": "Layer-2 routing tests for the book_generator_tom (TOM) setup. Each skill lists prompts that SHOULD route to it (should_fire) and prompts that must NOT (should_not_fire). The default runner is a deterministic nearest-description classifier over the SKILLS only (stdlib). Run: python tools/validate_claude_setup.py ../../book_generator_tom --route. Add --route-model to check against the real router.",
+
+  "hf-space-sync-deploy": {
+    "should_fire": [
+      "deploy the backend to the Hugging Face Space and push from inside hf_space",
+      "I changed config.yaml, run sync_to_space.sh and redeploy the Space",
+      "switch the app_file and rebuild the deployed Gradio space"
+    ],
+    "should_not_fire": [
+      "make the Braille domes taller and keep the tactile layers distinct",
+      "add a new nikud vowel-mark option to the disambiguation dropdown"
+    ]
+  },
+
+  "tactile-stl-geometry": {
+    "should_fire": [
+      "change the plate thickness and stroke height in config.yaml for printability",
+      "make the Braille domes taller so the tactile layers stay distinct",
+      "the STL layer heights look wrong, debug the page geometry and dimensions"
+    ],
+    "should_not_fire": [
+      "push the Gradio app to the Hugging Face Space after editing config",
+      "fix the skeletonization producing double lines in the DXF export"
+    ]
+  },
+
+  "hebrew-braille-nikud": {
+    "should_fire": [
+      "add a new nikud vowel-mark option to the disambiguation dropdown",
+      "the Hebrew to Braille translation is wrong, check SPECIAL_REPLACEMENTS",
+      "update language_funcs and mirror the nikud keys in web/src/lib/nikud.js"
+    ],
+    "should_not_fire": [
+      "make the Braille domes taller for FDM printability",
+      "the PNG to DXF skeletonization is producing double lines"
+    ]
+  },
+
+  "image-dxf-generation": {
+    "should_fire": [
+      "the skeletonization is producing double lines in the DXF export",
+      "Stable Diffusion line-art generation then thinning to a single-stroke DXF",
+      "the DXF comes out empty after PNG conversion, debug image_funcs"
+    ],
+    "should_not_fire": [
+      "make the Braille domes taller and keep the layers tactilely distinct",
+      "push the Gradio app to the Hugging Face Space"
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "_comment": "Layer-2 routing tests for the DL-Project setup. Each skill lists prompts that SHOULD route to it (should_fire) and prompts that must NOT (should_not_fire). Run: python tools/validate_claude_setup.py claude-setups/DL-Project --route. The default runner is a deterministic nearest-description classifier (stdlib); add --route-model to check against the real router.",
+
+  "tinyml-deployment": {
+    "should_fire": [
+      "export the trained model to the ESP32-S3 with int8 quantization",
+      "will this network fit in the 8 MB PSRAM and Flash budget on device",
+      "prune and quantize the classifier for TFLite-Micro"
+    ],
+    "should_not_fire": [
+      "build the log-Mel spectrograms for the 3 second clips",
+      "record in the decision log why we picked this threshold"
+    ]
+  },
+
+  "audio-dsp-pipeline": {
+    "should_fire": [
+      "resample audio to 16 kHz mono and produce log-Mel spectrograms",
+      "set the librosa params for feature extraction and augmentation",
+      "mix fall sounds with water leakage at a controlled SNR"
+    ],
+    "should_not_fire": [
+      "export the model to the microcontroller and quantize it",
+      "mount Google Drive inside the Colab notebook"
+    ]
+  },
+
+  "ml-experiment-tracking": {
+    "should_fire": [
+      "set up an Optuna study to optimize the F2 metric",
+      "comparing two training trials and defending the threshold tuning",
+      "record why we chose this metric in the decision log"
+    ],
+    "should_not_fire": [
+      "quantize the model for on-device deployment to the ESP32",
+      "produce the log-Mel spectrograms from raw audio"
+    ]
+  },
+
+  "colab-drive-workflow": {
+    "should_fire": [
+      "the Colab notebook disconnected, how do I checkpoint to Google Drive",
+      "wire the notebook data paths to GCS and Drive",
+      "move this logic out of the notebook into src"
+    ],
+    "should_not_fire": [
+      "optimize the F2 objective with an Optuna study",
+      "estimate whether the model fits in PSRAM on the ESP32"
+    ]
+  }
+}

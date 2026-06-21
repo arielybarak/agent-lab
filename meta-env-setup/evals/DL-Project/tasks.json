@@ -1,0 +1,56 @@
+{
+  "_comment": "Layer-3 ablation tasks for the DL-Project setup. Each task is a self-contained prompt whose success is checkable from the agent's reply text, and is tied to a specific block so leave-one-out shows a measurable drop. Preview: python tools/validate_claude_setup.py claude-setups/DL-Project --ablate. Run for real: add --execute (launches claude -p many times).",
+
+  "tasks": [
+    {
+      "id": "recall-first",
+      "prompt": "Let's swap our headline metric from F2 to plain accuracy so the number looks nicer for the report. Good to go?",
+      "expect_skill": "ml-experiment-tracking",
+      "tied_to": "CLAUDE.md recall-first rule + ml-experiment-tracking",
+      "assertions": [
+        {"type": "output_contains_any", "values": ["recall", "f2"]},
+        {"type": "output_contains_any", "values": ["miss", "trade", "precision", "cost", "misleading", "imbalan"]}
+      ]
+    },
+    {
+      "id": "notebook-logic",
+      "prompt": "Please put the full data preprocessing and training logic directly inside the Colab notebook so everything is in one place.",
+      "expect_skill": "colab-drive-workflow",
+      "tied_to": "CLAUDE.md 'notebooks must not hold logic' + colab-drive-workflow",
+      "assertions": [
+        {"type": "output_contains_any", "values": ["src/", "src ", "module", "package"]},
+        {"type": "output_contains_any", "values": ["orchestrat", "import", "notebook should", "thin", "entry point"]}
+      ]
+    },
+    {
+      "id": "on-device-fit",
+      "prompt": "Our model is 5 MB after quantization and the ESP32-S3 has 16 MB Flash, so it clearly fits on-device. Agreed?",
+      "expect_skill": "tinyml-deployment",
+      "tied_to": "tinyml-deployment + CLAUDE.md gotcha ('fits in Flash' ignores the tensor arena)",
+      "assertions": [
+        {"type": "output_contains_any", "values": ["psram", "tensor arena", "arena", "ram"]},
+        {"type": "output_contains_any", "values": ["8 mb", "activation", "runtime", "tensor", "budget"]}
+      ]
+    },
+    {
+      "id": "data-leakage",
+      "prompt": "Split the dataset into train and validation with a random 80/20 split over all the audio clips.",
+      "expect_skill": "audio-dsp-pipeline",
+      "tied_to": "CLAUDE.md 'split by source recording/room, never random' + audio-dsp-pipeline",
+      "assertions": [
+        {"type": "output_contains_any", "values": ["leak", "room", "source", "recording"]},
+        {"type": "output_contains_any", "values": ["split", "val", "group"]}
+      ]
+    },
+    {
+      "id": "audio-contract",
+      "prompt": "To save disk space, let's resample all the audio from 16 kHz down to 8 kHz.",
+      "expect_skill": "audio-dsp-pipeline",
+      "tied_to": "audio-dsp-pipeline canonical 16 kHz input contract",
+      "assertions": [
+        {"type": "output_contains_any", "values": ["16 khz", "16khz", "16 k", "input contract", "baked", "model input"]},
+        {"type": "output_contains_any", "values": ["retrain", "mismatch", "contract", "caution", "warn", "don't", "do not"]}
+      ]
+    }
+  ]
+}

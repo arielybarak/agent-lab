@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""
+session-auto-commit hook
+
+Automatically stages and commits any modified tracked files at the end of an
+agent session.  Designed to be called by an agent orchestrator or as a
+post-session teardown step to ensure no work is silently lost.
+
+Usage:
+    python hooks/session-auto-commit [--message "auto: session commit"] [--dry-run]
+
+Exit codes:
+    0 - commit made (or nothing to commit)
+    1 - error (e.g. git not available, working directory not a repo)
+"""
+
+import argparse
+import subprocess
+import sys
+from datetime import datetime, timezone  # noqa: F401 — used for timestamp generation
+
+
+def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
+    """Run a shell command and return the result."""
+    return subprocess.run(cmd, capture_output=True, text=True, check=check)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Auto-commit agent session changes")
+    parser.add_argument(
+        "--message",
+        default=None,
+        help="Commit message (default: auto-generated with timestamp)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be committed without actually committing",
+    )
+    args = parser.parse_args()
+
+    # Check that we are inside a git repository.
+    result = run(["git", "rev-parse", "--is-inside-work-tree"], check=False)
+    if result.returncode != 0:
+        print("[session-auto-commit] Not a git repository — nothing to commit.", file=sys.stderr)
+        return 1
+
+    # Check for any changes (staged or unstaged tracked files).
+    status = run(["git", "status", "--porcelain"])
+    if not status.stdout.strip():
+        print("[session-auto-commit] Working tree is clean — nothing to commit.")
+        return 0
+
+    # Stage all modified/deleted tracked files (not untracked).
+    if not args.dry_run:
+        run(["git", "add", "--update"])
+
+    # Build commit message.
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    message = args.message or f"auto: session commit {timestamp}"
+
+    if args.dry_run:
+        staged = run(["git", "diff", "--cached", "--name-only"])
+        unstaged = run(["git", "diff", "--name-only"])
+        print(f"[session-auto-commit] DRY RUN — would commit with message: '{message}'")
+        print(f"  Staged files:\n{staged.stdout or '  (none)'}")
+        print(f"  Unstaged (not included):\n{unstaged.stdout or '  (none)'}")
+        return 0
+
+    commit = run(["git", "commit", "-m", message], check=False)
+    if commit.returncode == 0:
+        print(f"[session-auto-commit] Committed: {message}")
+        print(commit.stdout)
+    else:
+        print(f"[session-auto-commit] Commit failed:\n{commit.stderr}", file=sys.stderr)
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
