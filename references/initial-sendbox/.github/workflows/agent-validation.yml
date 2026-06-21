@@ -1,0 +1,40 @@
+  # Download and verify actionlint
+name: Validate GitHub Actions
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    name: Lint GitHub Actions Workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Make sure jq is available (it's pre-installed on ubuntu-latest, but good practice)
+      - name: Install actionlint
+        run: |
+          # Use a specific version or dynamically fetch the latest
+          ACTIONLINT_VERSION=1.7.3
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/actionlint/actionlint/releases/latest)
+          DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | jq -r '.assets[] | select(.name | test("^actionlint-linux-amd64")) | .browser_download_url')
+          CHECKSUM_URL=$(echo "$LATEST_RELEASE" | jq -r '.assets[] | select(.name | test("checksums.txt")) | .browser_download_url')
+
+          curl -s -L "$CHECKSUM_URL" -o checksums.txt
+          curl -s -L "$DOWNLOAD_URL" -o actionlint.tar.gz
+          sha256sum -c <(grep "actionlint-linux-amd64" checksums.txt)
+          tar -xzf actionlint.tar.gz
+          chmod +x actionlint
+          sudo mv actionlint /usr/local/bin/actionlint
+
+      # This is the step that actually lints your workflow files
+      - name: Run actionlint
+        run: actionlint -color
