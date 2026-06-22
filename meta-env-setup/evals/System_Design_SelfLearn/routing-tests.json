@@ -1,0 +1,68 @@
+{
+  "_comment": "Layer-2 routing tests for the System_Design_SelfLearn setup (5 skills: 3 patterns + 2 system-design). Each skill lists prompts that SHOULD route to it (should_fire) and prompts that must NOT (should_not_fire), including cross-course guards so the patterns and system-design skills stay in their own lane. Run: python tools/validate_claude_setup.py claude-setups/System_Design_SelfLearn --route. Default runner is a deterministic stemmed-Jaccard nearest-description classifier (stdlib); add --route-model to check the real router.",
+
+  "pattern-lesson-format": {
+    "should_fire": [
+      "does this lesson follow the house arc and structure",
+      "edit the lesson so it matches the house format",
+      "where do the Micro-Do and Trade-Offs sections go in a pattern lesson"
+    ],
+    "should_not_fire": [
+      "which pattern fits this problem in the Smart Home OS",
+      "regenerate the schema png image for this lesson",
+      "estimate the QPS and storage for the telemetry pipeline"
+    ]
+  },
+
+  "design-pattern-catalog": {
+    "should_fire": [
+      "which pattern fits this problem",
+      "is this pattern a common misuse or does it actually apply here",
+      "explain how the Adapter pattern works and when it applies"
+    ],
+    "should_not_fire": [
+      "edit the lesson to match the house arc and structure",
+      "add the graphviz schema diagram for this lesson",
+      "how should we shard the device registry for millions of homes"
+    ]
+  },
+
+  "architecture-diagrams": {
+    "should_fire": [
+      "add a graphviz schema diagram for the new lesson",
+      "regenerate the schema png images with generate_diagrams.py",
+      "the schema image link is broken, fix the Digraph color scheme"
+    ],
+    "should_not_fire": [
+      "which pattern should I use for this problem",
+      "what section order does the lesson arc follow",
+      "grade the course against the rubric and give it a score"
+    ]
+  },
+
+  "system-design-curriculum": {
+    "should_fire": [
+      "estimate the QPS and storage for the telemetry pipeline",
+      "how should we shard the device registry for millions of homes",
+      "design a rate limiter case study lesson"
+    ],
+    "should_not_fire": [
+      "which GoF pattern fits this problem",
+      "what is the section order for a pattern lesson",
+      "grade the course against the rubric and give it a score"
+    ]
+  },
+
+  "course-quality-rubric": {
+    "should_fire": [
+      "grade the course against the rubric and give it a score",
+      "what is the pass threshold for the improve loop",
+      "does the curriculum meet the grading bar"
+    ],
+    "should_not_fire": [
+      "estimate the storage for the news feed fan-out",
+      "which pattern fits this problem",
+      "add the graphviz schema diagram for this lesson"
+    ]
+  }
+}
