@@ -8,6 +8,33 @@ effective and minimal, instead of guessing.
 > the docs below is relative to here, so the kit is portable: copy or share the
 > whole `meta-env-setup/` folder and it works as a unit.
 
+## What you actually get
+
+**The deliverable** is a complete, installable **`.claude/` setup** for a target
+repo — its `CLAUDE.md` plus the skills / slash-commands / subagents / hooks that
+repo actually needs — landed under `claude-setups/<repo>/` with a dry-run
+`install.sh`. It's **config-as-files** Claude Code reads, not a runtime or a library.
+
+**The differentiator** is everything *around* that deliverable: the kit doesn't just
+*generate* a setup, it **measures** whether each block earns its place — because every
+always-loaded block costs the agent's routing budget, so "more" is not "better."
+
+**How a setup is evaluated — three layers, cheap → expensive, static → behavioral:**
+
+| Layer | Command | Answers | Cost |
+|---|---|---|---|
+| **1 · Inspection** | `--score` | Is each block well-targeted? (0–100) | instant, no model call |
+| **2 · Routing** | `--route` | Do descriptions fire on the right prompts (and stay quiet on the wrong ones)? | instant, no model call |
+| **3 · Ablation** | `--ablate --execute` | Does *removing* a block actually hurt real tasks? | runs an agent many times |
+
+Layers 1–2 are **cheap proxies** that flag suspects in seconds; only Layer 3 **proves**
+a block can be cut. The **`--score`** number is a deterministic blend of five
+heuristics over the always-loaded text — **trigger** (says *what* + *when*, 0.35),
+**specificity** (grounded in this repo's `CLAUDE.md`, 0.25), **redundancy** (no echoed
+or duplicate blocks, 0.25), **budget** (always-loaded cost stays sane, 0.10), and
+**leastpriv** (agents narrow their `tools:`, 0.05). No model call, so it's reproducible
+and CI-able. Full breakdown + data formats: **[`evals/README.md`](evals/README.md)**.
+
 ## What's inside
 
 | Folder | What it is |

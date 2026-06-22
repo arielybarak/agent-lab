@@ -25,6 +25,18 @@ The bridge: use static scoring as the fast gate, behavioral eval as the ground-t
 
 **Why:** Yours answers "is this skill well-written for this repo?" statically; theirs answers "does it actually change what Claude does?" empirically. Neither alone is complete; the bridge is.
 
+### Cross-Format Converter — Claude Code ↔ Antigravity (`cross-format-converter/`)
+Folder already exists with a detailed design doc. Translate a `.claude/` setup to/from
+**Google Antigravity** (`.agents/` + `GEMINI.md`/`AGENTS.md`), and emit a **translation
+report** rating each block clean / lossy / dropped. Skills and rules map nearly 1:1; the
+key insight is that `AGENTS.md` is a *shared* standard both tools read, so the best
+converter does *less* on the rules layer. Reuses the parse-and-grade shape of
+`meta-env-setup/tools/validate_claude_setup.py`.
+
+**Why:** Proves format-level fluency across the whole agent-tooling landscape, not just
+one vendor — and the fidelity report makes cross-ecosystem incompatibilities legible. The
+prose sibling of the Copilot-vs-Claude comparison below.
+
 ### MCP Server
 Build a custom MCP (Model Context Protocol) server — a small process that exposes tools Claude
 Code can invoke. Natural candidate: a "score this skill file" tool that wraps
