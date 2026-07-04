@@ -3,5 +3,19 @@
     "allow": [],
     "deny": [],
     "additionalDirectories": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport sys, json\nd = json.load(sys.stdin)\nf = d.get('tool_input', {}).get('file_path', '')\nif f.endswith('SKILL.md'):\n    print(json.dumps({'hookSpecificOutput':{'hookEventName':'PostToolUse','additionalContext':'SKILL.md written — score loop: python tools/validate_claude_setup.py <setup-dir> --score. Iterate description first, fill body after.'}}))\n\"",
+            "statusMessage": "Checking SKILL.md..."
+          }
+        ]
+      }
+    ]
   }
 }

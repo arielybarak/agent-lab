@@ -54,9 +54,12 @@ one folder. **Run its commands from inside `meta-env-setup/`** (`cd meta-env-set
 below is relative to that folder. See `meta-env-setup/README.md` for the overview.
 
 - **`tools/`** — stdlib-only `scaffold_claude_setup.py` (bootstraps a `.claude/` skeleton, adds
-  skills/commands/agents) and `validate_claude_setup.py` (CI-style structure check + three
-  advisory **effectiveness** modes — `--score` static audit, `--route` routing tests, `--ablate`
-  ablation; only the default gate fails CI). See `tools/README.md`.
+  skills/commands/agents, `--pool <topic>` parks a block in `tools-pool/` at zero routing-budget
+  cost), `mine_transcripts.py` (mines a repo's Claude Code session transcripts for repeated
+  commands / throwaway scripts / deploy-wait loops — evidence the code alone can't show), and
+  `validate_claude_setup.py` (CI-style structure check + four advisory **effectiveness** modes —
+  `--score` static audit, `--stale --repo` flags blocks citing identifiers no longer in the code,
+  `--route` routing tests, `--ablate` ablation; only the default gate fails CI). See `tools/README.md`.
 - **`evals/`** — methodology + per-repo eval data (task suites, routing tests) for the effectiveness
   modes; tracked because `claude-setups/` is gitignored. See `evals/README.md`.
 - **`.claude/skills/`** — the kit's method skills (they auto-activate when you work inside the

@@ -56,7 +56,14 @@ file alone), conventions, and the gotchas that bite newcomers.
 4. **Sharpen** the description and body until: high **trigger**, high **specificity**,
    no **redundancy** flag. Iterate on the description first — it's the highest-leverage
    text you'll write.
-5. Hand back: the block, its sub-scores, and one line on the failure mode it encodes.
+5. **Prove a command runs.** For a *command* block, state the exact one-line
+   invocation that proves it works. If the recipe is read-only, **run it now** and
+   confirm it succeeds; if it mutates / needs creds / burns quota, write the
+   **dry-run** invocation for the pipeline's smoke-test step and say why it can't run
+   inline. A command that fails on first execution is not done — a broken command is
+   worse than a missing one.
+6. Hand back: the block, its sub-scores, the proving invocation (+ result), and one
+   line on the failure mode it encodes.
 
 ## Boundaries
 - Write **only** under `claude-setups/<repo>/`. Never touch the real target repo.

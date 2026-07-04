@@ -28,6 +28,12 @@ Inspect what a setup contains::
 
     python tools/scaffold_claude_setup.py list --dir claude-setups/my-repo
 
+Brownfield — pull a repo's *existing* ``.claude/`` into a working copy (so the
+refine loop edits a copy, never the real repo). Also grabs the repo-root
+``CLAUDE.md`` and any backlog doc (``setup-backlog.md`` / ``tooling-review.md``)::
+
+    python tools/scaffold_claude_setup.py import ../../my-repo --dir claude-setups/my-repo
+
 Generated files are minimal but *valid*: skills/agents carry the required
 ``name`` + ``description`` front-matter, so ``validate_claude_setup.py`` passes on
 a fresh scaffold. Fill in the body, then re-validate.
@@ -37,6 +43,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -192,6 +199,9 @@ TODO the directories that matter and what lives in each.
 # `add` element kind -> subdir under .claude/
 ELEMENTS = {"skill": "skills", "command": "commands", "agent": "agents", "hook": "hooks"}
 SUBDIRS = ("skills", "commands", "agents", "hooks")
+# Demands-doc filenames recognized by `import`, in priority order. The first is the
+# kit's own template (templates/setup-backlog.md); the rest are common in-the-wild names.
+BACKLOG_NAMES = ("setup-backlog.md", "tooling-review.md")
 
 
 def _write(path: Path, content: str, force: bool, executable: bool = False) -> bool:
@@ -204,6 +214,21 @@ def _write(path: Path, content: str, force: bool, executable: bool = False) -> b
     if executable:
         path.chmod(0o755)
     print(f"  wrote: {path}")
+    return True
+
+
+def _copy(src: Path, dst: Path, force: bool) -> bool:
+    """Copy ``src`` to ``dst``; skip if it exists unless ``force``.
+
+    Binary-safe and preserves mode bits (so imported hooks stay executable) —
+    the sibling of ``_write`` for the ``import`` path.
+    """
+    if dst.exists() and not force:
+        print(f"  skip (exists): {dst}")
+        return False
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst)
+    print(f"  copied: {dst}")
     return True
 
 
@@ -236,11 +261,26 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 
 def cmd_add(args: argparse.Namespace) -> int:
-    """Add a single skill / command / agent / hook under an existing setup root."""
+    """Add a single skill / command / agent / hook under an existing setup root.
+
+    With ``--pool <topic>`` the block is parked in
+    ``.claude/tools-pool/<kind>/<topic>/`` instead of the active folder. Claude Code
+    only reads the active folders, so a pooled block costs zero routing budget until
+    it's promoted (``mv`` back). Pooling applies to skills/commands/agents — a hook is
+    wired via settings.json, not auto-loaded, so it can't be "parked".
+    """
     root = Path(args.dir)
-    base = root / ".claude" / ELEMENTS[args.kind]
+    pool = getattr(args, "pool", None)
+    if pool:
+        if args.kind == "hook":
+            print("  error: hooks can't be pooled (they're wired in settings.json, not auto-loaded)",
+                  file=sys.stderr)
+            return 1
+        base = root / ".claude" / "tools-pool" / ELEMENTS[args.kind] / pool
+    else:
+        base = root / ".claude" / ELEMENTS[args.kind]
     name = args.name
-    print(f"Adding {args.kind}: {name}")
+    print(f"Adding {args.kind}: {name}" + (f"  (pooled → tools-pool/{ELEMENTS[args.kind]}/{pool})" if pool else ""))
 
     if args.kind == "skill":
         target = base / name / "SKILL.md"
@@ -268,6 +308,10 @@ def cmd_add(args: argparse.Namespace) -> int:
     if not wrote:
         print("  (use --force to overwrite)")
         return 1
+    if pool:
+        print(f"  note: parked in the pool (zero routing budget). Promote when its phase starts:\n"
+              f"        mv {target.parent if args.kind == 'skill' else target} "
+              f"{root}/.claude/{ELEMENTS[args.kind]}/")
     return 0
 
 
@@ -286,6 +330,80 @@ def cmd_list(args: argparse.Namespace) -> int:
     for label, items in (("skills", skills), ("commands", commands), ("agents", agents), ("hooks", hooks)):
         print(f"  {label:9} ({len(items)}): {', '.join(items) if items else '-'}")
     print(f"  settings: {'present' if (claude / 'settings.json').is_file() else 'MISSING'}")
+
+    # Pooled blocks — parked in tools-pool/, invisible to Claude Code (zero budget).
+    pool = claude / "tools-pool"
+    if pool.is_dir():
+        pooled = sorted(
+            f"{p.relative_to(pool)}"
+            for p in list(pool.glob("skills/*/*/SKILL.md")) + list(pool.glob("commands/*/*.md")) + list(pool.glob("agents/*/*.md"))
+        )
+        print(f"  pooled    ({len(pooled)}): {', '.join(pooled) if pooled else '-'}")
+    return 0
+
+
+def _resolve_claude_src(source: Path) -> Path | None:
+    """Return the ``.claude/`` dir for ``source`` (a repo dir or a ``.claude/`` itself)."""
+    if source.name == ".claude" and source.is_dir():
+        return source
+    if (source / ".claude").is_dir():
+        return source / ".claude"
+    return None
+
+
+def cmd_import(args: argparse.Namespace) -> int:
+    """Import a repo's existing ``.claude/`` into a working setup folder.
+
+    Brownfield entry point: copies the live setup into ``claude-setups/<repo>/`` so
+    the author/validate/refine loop operates on a *working copy* — the real repo is
+    never edited (``install.sh --apply`` is the only path back). Also pulls the
+    repo-root ``CLAUDE.md`` (the project brief ``--score`` reads) and surfaces any
+    backlog doc (``setup-backlog.md`` / ``tooling-review.md``) to drive the upgrade.
+    """
+    source = Path(args.source)
+    src_claude = _resolve_claude_src(source)
+    if src_claude is None:
+        print(f"no .claude/ found at {source} (pass a repo dir or a .claude/ path)", file=sys.stderr)
+        return 1
+    repo_root = src_claude.parent
+    dest_root = Path(args.dir)
+    dest_claude = dest_root / ".claude"
+    print(f"Importing existing setup: {src_claude} -> {dest_claude}")
+
+    copied = 0
+    for src_file in sorted(src_claude.rglob("*")):
+        if src_file.is_file():
+            if _copy(src_file, dest_claude / src_file.relative_to(src_claude), args.force):
+                copied += 1
+
+    # The repo-root CLAUDE.md is part of a setup and the brief --score grades against.
+    src_md = repo_root / "CLAUDE.md"
+    if src_md.is_file():
+        _copy(src_md, dest_root / "CLAUDE.md", args.force)
+    else:
+        print("  note: no CLAUDE.md at repo root (the spec/--score step expects one)")
+
+    # Locate a backlog doc (it may live inside .claude/ or at the repo root).
+    backlog = None
+    for bn in BACKLOG_NAMES:
+        if (dest_claude / bn).is_file():
+            backlog = dest_claude / bn
+            break
+        if (repo_root / bn).is_file():
+            _copy(repo_root / bn, dest_root / bn, args.force)
+            backlog = dest_root / bn
+            break
+
+    print(f"\nImported {copied} file(s) from {src_claude}.")
+    cmd_list(argparse.Namespace(dir=str(dest_root)))
+    if backlog:
+        print(f"  backlog:  {backlog}")
+    else:
+        print("  backlog:  none found — author one from templates/setup-backlog.md")
+    print(
+        "\nNext: reconcile the backlog against these blocks, then work it with "
+        "/upgrade-claude-setup (the real repo stays untouched until install.sh --apply)."
+    )
     return 0
 
 
@@ -307,12 +425,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_add.add_argument("name", help="element name (kebab-case)")
     p_add.add_argument("--dir", default=".", help="setup root containing .claude/ (default: .)")
     p_add.add_argument("--desc", default="", help="fill the description (skills/commands/agents)")
+    p_add.add_argument("--pool", default=None, metavar="TOPIC",
+                       help="park in .claude/tools-pool/<kind>/<TOPIC>/ (built for a later phase; zero budget)")
     p_add.add_argument("--force", action="store_true", help="overwrite if it exists")
     p_add.set_defaults(func=cmd_add)
 
     p_list = sub.add_parser("list", help="list the blocks in a setup")
     p_list.add_argument("--dir", default=".", help="setup root containing .claude/ (default: .)")
     p_list.set_defaults(func=cmd_list)
+
+    p_import = sub.add_parser("import", help="import an existing repo's .claude/ into a working setup folder")
+    p_import.add_argument("source", help="repo dir (containing .claude/) or a .claude/ path")
+    p_import.add_argument("--dir", default=".", help="destination setup root, e.g. claude-setups/<repo> (default: .)")
+    p_import.add_argument("--force", action="store_true", help="overwrite existing files in the destination")
+    p_import.set_defaults(func=cmd_import)
 
     return p
 
