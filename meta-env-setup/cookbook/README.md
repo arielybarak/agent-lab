@@ -53,6 +53,7 @@ description: >-
 | **Explain / translate** | a dense artifact is hard to read | `explain-rtl`, `explain-asm` |
 | **Report / check** | a standard analysis is rerun often | `timing-report`, `sva-check`, `eval-report`, `perf-compare` |
 | **Guided transform** | a repetitive code move has rules | `notebook-to-src` |
+| **Setup-retro** | **ship in every setup** — turn a painful session into a machine-consumable backlog so `/upgrade-claude-setup` can improve the setup; the trap it removes: **silent rot** (skills describing the pre-migration engine, TOM's Era-2) | `setup-retro` (template in `templates/`) |
 
 **Command skeleton:**
 ```markdown

@@ -9,6 +9,7 @@ KEEP/CUT verdict) is exercised without launching a single ``claude`` process.
 Run:  python tools/test_audit.py          (or: python -m unittest -v tools/test_audit.py)
 """
 
+import json
 import sys
 import tempfile
 import unittest
@@ -162,6 +163,222 @@ class TestAblationVerdict(unittest.TestCase):
             self.assertEqual(results["skill:edge-deploy"]["needs-audio-prep"], 1.0)
             self.assertIn("skill:edge-deploy", cut)          # dead weight for this task
             self.assertNotIn("skill:audio-prep", cut)        # load-bearing
+
+
+# --------------------------------------------------------------------------- #
+# scaffold_claude_setup import subcommand
+# --------------------------------------------------------------------------- #
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import scaffold_claude_setup as scs  # noqa: E402
+
+
+class TestScaffolderImport(unittest.TestCase):
+    def test_import_copies_all_files_and_skips_existing(self):
+        with tempfile.TemporaryDirectory() as src_d, tempfile.TemporaryDirectory() as dst_d:
+            src = Path(src_d)
+            dst = Path(dst_d) / "dest"
+            # Build a minimal fake .claude/ in src
+            (src / ".claude" / "skills" / "my-skill").mkdir(parents=True)
+            (src / ".claude" / "skills" / "my-skill" / "SKILL.md").write_text("---\nname: my-skill\ndescription: test\n---\n")
+            (src / ".claude" / "commands" / "my-cmd.md").parent.mkdir(parents=True)
+            (src / ".claude" / "commands" / "my-cmd.md").write_text("---\ndescription: cmd\n---\n")
+            (src / ".claude" / "settings.json").write_text("{}")
+            (src / "CLAUDE.md").write_text("# Project\nHello.\n")
+            # Also put a backlog doc in the .claude/ dir
+            (src / ".claude" / "setup-backlog.md").write_text("# Backlog\n- item 1\n")
+
+            args = scs.build_parser().parse_args(["import", str(src), "--dir", str(dst)])
+            rc = scs.cmd_import(args)
+            self.assertEqual(rc, 0)
+
+            # Files copied
+            self.assertTrue((dst / ".claude" / "skills" / "my-skill" / "SKILL.md").is_file())
+            self.assertTrue((dst / ".claude" / "commands" / "my-cmd.md").is_file())
+            self.assertTrue((dst / "CLAUDE.md").is_file())
+            # Backlog discovered inside .claude/
+            self.assertTrue((dst / ".claude" / "setup-backlog.md").is_file())
+
+    def test_import_force_overwrites(self):
+        with tempfile.TemporaryDirectory() as src_d, tempfile.TemporaryDirectory() as dst_d:
+            src = Path(src_d)
+            dst = Path(dst_d) / "dest"
+            (src / ".claude" / "settings.json").parent.mkdir(parents=True)
+            (src / ".claude" / "settings.json").write_text('{"v":1}')
+            (src / "CLAUDE.md").write_text("# v1\n")
+
+            # Import once
+            scs.cmd_import(scs.build_parser().parse_args(["import", str(src), "--dir", str(dst)]))
+            # Modify source
+            (src / ".claude" / "settings.json").write_text('{"v":2}')
+            (src / "CLAUDE.md").write_text("# v2\n")
+
+            # Without --force: skips
+            scs.cmd_import(scs.build_parser().parse_args(["import", str(src), "--dir", str(dst)]))
+            self.assertIn('"v":1', (dst / ".claude" / "settings.json").read_text())
+
+            # With --force: overwrites
+            scs.cmd_import(scs.build_parser().parse_args(["import", str(src), "--dir", str(dst), "--force"]))
+            self.assertIn('"v":2', (dst / ".claude" / "settings.json").read_text())
+
+    def test_import_accepts_dotclaude_path_directly(self):
+        with tempfile.TemporaryDirectory() as src_d, tempfile.TemporaryDirectory() as dst_d:
+            src = Path(src_d)
+            (src / ".claude" / "settings.json").parent.mkdir(parents=True)
+            (src / ".claude" / "settings.json").write_text("{}")
+            (src / "CLAUDE.md").write_text("# X\n")
+
+            dst = Path(dst_d) / "dest"
+            args = scs.build_parser().parse_args(["import", str(src / ".claude"), "--dir", str(dst)])
+            rc = scs.cmd_import(args)
+            self.assertEqual(rc, 0)
+            self.assertTrue((dst / ".claude" / "settings.json").is_file())
+
+
+# --------------------------------------------------------------------------- #
+# Layer 1b — staleness check (--stale --repo)
+# --------------------------------------------------------------------------- #
+class TestStalePrimitives(unittest.TestCase):
+    def test_identifier_nouns_keeps_code_ignores_prose(self):
+        nouns = vcs._identifier_nouns(
+            "Call render_mesh and _filled_glyphs_to_dxf; the STROKE_TAPER_DEG flag; "
+            "MotionConfig lives in engine.py. This is plain English prose."
+        )
+        self.assertIn("render_mesh", nouns)
+        self.assertIn("filled_glyphs_to_dxf", nouns)   # leading underscore stripped
+        self.assertIn("STROKE_TAPER_DEG", nouns)
+        self.assertIn("MotionConfig", nouns)
+        self.assertIn("engine.py", nouns)
+        # plain English words are NOT identifiers (they'd grep-hit anything)
+        self.assertNotIn("plain", nouns)
+        self.assertNotIn("English", nouns)
+
+    def test_is_stale_thresholds(self):
+        repo = {"alive_one", "alive_two"}
+        # 2+ dead -> stale
+        flag, dead = vcs._is_stale({"dead_a", "dead_b", "alive_one"}, repo)
+        self.assertTrue(flag)
+        self.assertEqual(dead, ["dead_a", "dead_b"])
+        # 1 dead of 3 (33%) -> fresh
+        flag, _ = vcs._is_stale({"dead_a", "alive_one", "alive_two"}, repo)
+        self.assertFalse(flag)
+        # 1 dead of 2 (50%) -> stale
+        flag, _ = vcs._is_stale({"dead_a", "alive_one"}, repo)
+        self.assertTrue(flag)
+
+
+def _make_stale_fixture(tmp: Path) -> tuple[Path, Path]:
+    """A fake repo + a setup whose blocks partly reference removed code."""
+    repo = tmp / "repo"
+    _write(repo / "engine.py",
+           "def render_mesh(x):\n    FILLED_CONTOUR = 1\n    return _filled_glyphs_to_dxf(x)\n")
+    setup = tmp / "setup"
+    _write(setup / "CLAUDE.md", "# Demo\nMesh engine.\n")
+    # fresh: every identifier it cites exists in engine.py
+    _write(setup / ".claude" / "skills" / "fresh-skill" / "SKILL.md",
+           "---\nname: fresh-skill\ndescription: >-\n  Mesh via render_mesh. USE WHEN rendering.\n---\n"
+           "Use render_mesh in engine.py; the FILLED_CONTOUR flag matters.\n")
+    # stale: cites removed functions/constants
+    _write(setup / ".claude" / "skills" / "stale-skill" / "SKILL.md",
+           "---\nname: stale-skill\ndescription: >-\n  Old path. USE WHEN skeletonizing.\n---\n"
+           "Call skeletonize_image and BOOLEAN_UNION from old_module.py.\n")
+    # pooled + stale: must still be scanned
+    _write(setup / ".claude" / "tools-pool" / "skills" / "frontend" / "pooled-stale" / "SKILL.md",
+           "---\nname: pooled-stale\ndescription: >-\n  Parked. USE WHEN tapering.\n---\n"
+           "Uses taper_extrude with DRAFT_ANGLE_DEG.\n")
+    return setup, repo
+
+
+class TestStaleScan(unittest.TestCase):
+    def test_flags_removed_code_keeps_fresh_and_scans_pool(self):
+        with tempfile.TemporaryDirectory() as d:
+            setup, repo = _make_stale_fixture(Path(d))
+            findings, err = vcs.stale(setup, str(repo))
+            self.assertEqual(err, "")
+            by_name = {Path(f.path).parent.name: f for f in findings}
+            self.assertEqual(by_name["fresh-skill"].verdict, "fresh")
+            self.assertEqual(by_name["stale-skill"].verdict, "stale-suspect")
+            # the pooled block is scanned and flagged, with pooled=True
+            self.assertEqual(by_name["pooled-stale"].verdict, "stale-suspect")
+            self.assertTrue(by_name["pooled-stale"].pooled)
+            self.assertFalse(by_name["stale-skill"].pooled)
+
+    def test_missing_repo_reports_error(self):
+        with tempfile.TemporaryDirectory() as d:
+            setup, _ = _make_stale_fixture(Path(d))
+            findings, err = vcs.stale(setup, str(Path(d) / "does-not-exist"))
+            self.assertEqual(findings, [])
+            self.assertIn("not found", err)
+
+
+# --------------------------------------------------------------------------- #
+# transcript miner
+# --------------------------------------------------------------------------- #
+import mine_transcripts as mt  # noqa: E402
+
+
+def _event(cmd: str) -> str:
+    return json.dumps({
+        "type": "assistant", "timestamp": "2026-06-10T22:40:13.939Z",
+        "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"command": cmd}}]},
+    })
+
+
+class TestMinerPrimitives(unittest.TestCase):
+    def test_slug_matches_claude_code_layout(self):
+        self.assertEqual(mt.slug_for(Path("/home/barak/book_generator_tom")),
+                         "-home-barak-book-generator-tom")
+
+    def test_normalize_clusters_variants(self):
+        a = mt.normalize_cmd('curl -s "https://a/logs" 2>/dev/null | python3 -c "x"')
+        b = mt.normalize_cmd('curl -s "https://b/logs" 2>/dev/null | python3 -c "y"')
+        self.assertEqual(a, b)  # different URLs/strings collapse to one template
+
+    def test_redact_hides_secrets(self):
+        red = mt._redact('curl -H "Authorization: Bearer hf_ABCDEFGH1234567890" https://x')
+        self.assertNotIn("hf_ABCDEFGH1234567890", red)
+        self.assertIn("<REDACTED>", red)
+
+    def test_is_throwaway(self):
+        self.assertTrue(mt.is_throwaway('python3 -c "import json"'))
+        self.assertTrue(mt.is_throwaway("cat <<'EOF' > /tmp/x.py"))
+        self.assertFalse(mt.is_throwaway("pytest tests/"))
+
+
+class TestMinerScan(unittest.TestCase):
+    def test_clusters_repeats_flags_deploy_and_redacts(self):
+        with tempfile.TemporaryDirectory() as d:
+            tdir = Path(d)
+            # a secret-bearing log pull, repeated 3x (varied host) -> one cluster, printed
+            lines = [
+                _event(f'curl -H "Authorization: Bearer hf_TOPSECRET1234567" "https://api{n}/logs/run"')
+                for n in "abc"
+            ] + [
+                _event('python3 -c "print(1)"'),   # throwaway
+                _event("git push origin main"),     # deploy
+            ]
+            (tdir / "s.jsonl").write_text("\n".join(lines), encoding="utf-8")
+
+            r = mt.mine(tdir, None)
+            self.assertEqual(r["n_files"], 1)
+            # the three curl variants collapse into one cluster of 3
+            self.assertEqual(max(r["bash"].values()), 3)
+            # the python -c one-liner is flagged throwaway
+            self.assertGreaterEqual(sum(r["throwaway"].values()), 1)
+            # git push counts as a deploy; the log pulls count as waits
+            self.assertGreaterEqual(r["n_deploy"], 1)
+            self.assertGreaterEqual(r["n_wait"], 3)
+
+            report = mt.render_markdown(tdir, tdir, r, min_repeats=3)
+            self.assertIn("<REDACTED>", report)          # redaction reaches the output
+            self.assertNotIn("hf_TOPSECRET1234567", report)
+
+    def test_missing_dir_is_empty_report_not_crash(self):
+        with tempfile.TemporaryDirectory() as d:
+            missing = Path(d) / "nope"
+            r = mt.mine(missing, None)
+            self.assertEqual(r["n_files"], 0)
+            report = mt.render_markdown(missing, missing, r, min_repeats=3)
+            self.assertIn("No transcripts found", report)
 
 
 if __name__ == "__main__":

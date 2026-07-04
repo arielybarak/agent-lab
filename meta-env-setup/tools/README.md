@@ -52,6 +52,10 @@ gates CI**; the rest are advisory / their own test suites.
 python tools/validate_claude_setup.py claude-setups/<repo> --score
 python tools/validate_claude_setup.py claude-setups/<repo> --score --min-score 80   # optional gate
 
+# Layer 1b — staleness: flag blocks that cite code identifiers no longer in the repo
+# (the "skill still describes the pre-migration engine" problem). Scans pooled blocks too.
+python tools/validate_claude_setup.py claude-setups/<repo> --stale --repo ../<real-repo>
+
 # Layer 2 — routing tests: do descriptions fire on the right prompts (evals/<repo>/routing-tests.json)?
 python tools/validate_claude_setup.py claude-setups/<repo> --route
 

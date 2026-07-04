@@ -15,6 +15,7 @@ they live in a tracked folder instead. One suite per target: `evals/<repo>/`.
 | Layer | Command | What it measures | Proves |
 |---|---|---|---|
 | **1. Inspection** | `--score` | context budget, redundancy, trigger quality, specificity, least-privilege | flags *suspects* (instant, stdlib) |
+| **1b. Staleness** | `--stale --repo` | is each block still *true* — do the code identifiers it cites still exist in the repo (active **and** pooled blocks) | flags blocks that drifted after a refactor/migration |
 | **2. Routing** | `--route` | does each description fire on the right prompts, and stay quiet on the wrong ones | the labels actually steer |
 | **3. Ablation** | `--ablate --execute` | run real tasks full vs. leave-one-out vs. none → KEEP/CUT per block | exactly what earns its place |
 

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -605,8 +606,144 @@ def route(root: Path, tests_path: str | None) -> tuple[int, int, list[str]]:
     return passed, total, lines
 
 
+# ===========================================================================
+# Layer 1b — staleness (``--stale --repo <path>``). ADVISORY: never gates CI.
+#
+# A block that describes code which no longer exists misleads worse than a
+# missing block (the TOM Era-2 problem: skills still naming boolean-union / taper
+# / skeletonization after the engine migration removed them). This is a purely
+# MECHANICAL check — it extracts the distinctive *identifiers* a block cites
+# (snake_case, CONSTANT_CASE, CamelCase, filenames) and greps them against the
+# target repo. Zero hits => "dead noun". Enough dead nouns => stale-suspect.
+# (Prose-concept drift like the word "skeletonization" is the analyzer's job, not
+# this scan's.) Pooled blocks (tools-pool/) are scanned too: a pre-built parked
+# block can rot before it's ever promoted.
+# ===========================================================================
+
+STALE_SKIP_DIRS = {
+    ".git", "node_modules", "__pycache__", "dist", "build", ".venv", "venv",
+    ".next", ".cache", "outputs", "vendor", "target", ".mypy_cache", ".pytest_cache",
+}
+STALE_MAX_FILE_BYTES = 2_000_000
+
+_IDENT_PATTERNS = (
+    re.compile(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+"),                 # CONSTANT_CASE
+    re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)+"),                 # snake_case
+    re.compile(r"[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+"),            # CamelCase
+    re.compile(r"[\w-]+\.(?:py|js|jsx|ts|tsx|mjs|cpp|hpp|h|cc|sv|svh|go|rs|rb|java|yaml|yml)\b"),  # filenames
+)
+
+
+def _identifier_nouns(text: str) -> set[str]:
+    """Distinctive code identifiers a block cites — the things that can go stale.
+
+    Deliberately narrow: only tokens that unambiguously name a code artifact
+    (multi-part identifiers, filenames), so a hit is real and false positives are
+    rare. Plain English words are ignored — they'd grep-hit anything.
+    """
+    out: set[str] = set()
+    for pat in _IDENT_PATTERNS:
+        out.update(pat.findall(text))
+    return out
+
+
+def _repo_token_index(repo: Path) -> set[str]:
+    """Every identifier present anywhere in the repo's text files (+ file basenames)."""
+    tokens: set[str] = set()
+    for dirpath, dirnames, filenames in os.walk(repo):
+        dirnames[:] = [d for d in dirnames if d not in STALE_SKIP_DIRS]
+        for fn in filenames:
+            tokens.add(fn)  # a filename cited verbatim counts as present
+            f = Path(dirpath) / fn
+            try:
+                if f.stat().st_size > STALE_MAX_FILE_BYTES:
+                    continue
+                raw = f.read_bytes()
+            except OSError:
+                continue
+            if b"\x00" in raw[:4096]:
+                continue  # binary
+            tokens |= _identifier_nouns(raw.decode("utf-8", "ignore"))
+    return tokens
+
+
+def _is_stale(nouns: set[str], repo_tokens: set[str]) -> tuple[bool, list[str]]:
+    """(stale?, sorted dead nouns). Flag when >=2 dead, or >=50% dead of >=2 total."""
+    dead = sorted(n for n in nouns if n not in repo_tokens)
+    flag = len(dead) >= 2 or (len(nouns) >= 2 and len(dead) / len(nouns) >= 0.5)
+    return flag, dead
+
+
+@dataclass
+class StaleFinding:
+    path: str
+    kind: str
+    pooled: bool
+    n_nouns: int
+    dead: list[str]
+    verdict: str  # "fresh" | "stale-suspect"
+
+
+def _collect_pool_blocks(claude: Path) -> list[Block]:
+    """Blocks parked under tools-pool/ (invisible to Claude Code, but can still rot)."""
+    blocks: list[Block] = []
+    pool = claude / "tools-pool"
+    if not pool.is_dir():
+        return blocks
+    for md in sorted(pool.glob("skills/*/*/SKILL.md")):
+        text = md.read_text(encoding="utf-8")
+        fm = parse_front_matter(text) or {}
+        blocks.append(Block("skill", fm.get("name", md.parent.name) or md.parent.name,
+                            fm.get("description", ""), _strip_front_matter(text), None, str(md)))
+    for f in sorted(pool.glob("commands/*/*.md")):
+        text = f.read_text(encoding="utf-8")
+        fm = parse_front_matter(text) or {}
+        blocks.append(Block("command", f.stem, fm.get("description", ""),
+                            _strip_front_matter(text), None, str(f)))
+    for f in sorted(pool.glob("agents/*/*.md")):
+        text = f.read_text(encoding="utf-8")
+        fm = parse_front_matter(text) or {}
+        blocks.append(Block("agent", fm.get("name", f.stem) or f.stem, fm.get("description", ""),
+                            _strip_front_matter(text), fm.get("tools"), str(f)))
+    return blocks
+
+
+def stale(root: Path, repo_path: str) -> tuple[list[StaleFinding], str]:
+    """Scan every block (active + pooled) for identifiers absent from the target repo."""
+    claude = root / ".claude" if (root / ".claude").is_dir() else root
+    repo = Path(repo_path)
+    if not repo.is_dir():
+        return [], f"repo path not found: {repo_path}"
+    repo_tokens = _repo_token_index(repo)
+    active = _collect_blocks(claude)
+    pooled = _collect_pool_blocks(claude)
+    findings: list[StaleFinding] = []
+    for blocks, is_pooled in ((active, False), (pooled, True)):
+        for b in blocks:
+            nouns = _identifier_nouns(b.description + "\n" + b.body)
+            flag, dead = _is_stale(nouns, repo_tokens)
+            findings.append(StaleFinding(b.path, b.kind, is_pooled, len(nouns), dead,
+                                         "stale-suspect" if flag else "fresh"))
+    return findings, ""
+
+
+def print_stale(root: Path, findings: list[StaleFinding], err: str) -> None:
+    if err:
+        print(f"[STALE] {root}: {err}")
+        return
+    suspects = [f for f in findings if f.verdict == "stale-suspect"]
+    print(f"[STALE] {root}: {len(suspects)}/{len(findings)} block(s) stale-suspect")
+    for f in findings:
+        if f.verdict != "stale-suspect":
+            continue
+        tag = "stale-suspect (pooled)" if f.pooled else "stale-suspect"
+        ex = ", ".join(f.dead[:4]) + ("…" if len(f.dead) > 4 else "")
+        print(f"  [{tag}] {f.path}: {len(f.dead)}/{f.n_nouns} cited identifiers not found in repo ({ex})")
+    print("  (advisory; identifier-grep only — the analyzer judges prose-concept drift)")
+
+
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="Validate, score, route-test, or ablate Claude Code (.claude/) setups.")
+    p = argparse.ArgumentParser(description="Validate, score, route-test, stale-check, or ablate Claude Code (.claude/) setups.")
     p.add_argument("roots", nargs="+", help="setup root(s) (folder containing .claude/, or a .claude/ itself)")
     p.add_argument("--json", action="store_true", help="machine-readable output")
     p.add_argument("--strict", action="store_true", help="validate: treat warnings as failures")
@@ -614,6 +751,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--min-score", type=int, default=None, help="--score: exit 1 if composite < N")
     p.add_argument("--route", action="store_true", help="Layer 2: routing tests (evals/<repo>/routing-tests.json)")
     p.add_argument("--route-tests", help="explicit path to a routing-tests.json")
+    p.add_argument("--stale", action="store_true", help="Layer 1b: flag blocks citing identifiers absent from --repo (advisory)")
+    p.add_argument("--repo", help="--stale: path to the real target repo the setup serves")
     p.add_argument("--ablate", action="store_true", help="Layer 3: ablation — defaults to a free dry-run preview (see tools/_ablation.py)")
     p.add_argument("--execute", action="store_true", help="--ablate: actually launch the agent runs (costs compute)")
     p.add_argument("--tasks", help="--ablate: explicit path to a tasks.json")
@@ -626,6 +765,24 @@ def main(argv: list[str] | None = None) -> int:
         import _ablation  # noqa: E402  (local module, only needed for this mode)
         return _ablation.run_ablation(Path(args.roots[0]), args.tasks, args.repeats,
                                       dry_run=not args.execute, as_json=args.json)
+
+    # Layer 1b — staleness (block identifiers vs. the real repo). Advisory; exit 0.
+    if args.stale:
+        if not args.repo:
+            print("--stale requires --repo <path-to-target-repo>", file=sys.stderr)
+            return 2
+        results = [(r, *stale(Path(r), args.repo)) for r in args.roots]
+        if args.json:
+            print(json.dumps([
+                {"root": str(r), "error": err,
+                 "findings": [vars(f) for f in findings]}
+                for r, findings, err in results], indent=2))
+        else:
+            for i, (r, findings, err) in enumerate(results):
+                if i:
+                    print()
+                print_stale(Path(r), findings, err)
+        return 0
 
     # Layer 2 — routing tests.
     if args.route:

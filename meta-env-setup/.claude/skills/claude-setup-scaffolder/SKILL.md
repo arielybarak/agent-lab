@@ -31,12 +31,36 @@ for repeated workflows, then agents for review/planning, then hooks last.** Don'
 ship a block that doesn't pull its weight — every skill description costs the
 model's routing budget.
 
+**Tool pool** — a block built for a *later* phase (not the current work) is parked in
+`.claude/tools-pool/{skills,commands,agents}/<topic>/` instead of the active folder.
+Claude Code only reads the active folders, so a pooled block costs **zero** routing
+budget until you `mv` it back. Author it to the same quality bar, park it, promote it
+when the phase starts. (Exception: on a **greenfield** repo, *don't* pre-build
+speculative blocks — note them as deferred candidates instead; there's no code to
+ground or freshness-check them against yet.) See "Tool pool" in the hub `README.md`.
+
+## Brownfield branch — existing `.claude/` + a backlog
+If the repo already has a setup and a `setup-backlog.md` / `tooling-review.md`:
+**use `/upgrade-claude-setup` instead of this greenfield path.**
+1. `import` the live setup into `claude-setups/<repo>/` (working copy only).
+2. `setup-analyzer` reads existing blocks + backlog → reconciliation table (ADD/FIX/REWRITE/KEEP/CUT).
+3. `block-author` works the table; `/refine-setup` closes the loop.
+Template at `templates/setup-backlog.md`; details in the command.
+
 ## Workflow
-1. **Analyze the repo** — language, build/test commands, the *one rule that
-   overrides others* (recall-first? frozen branch? no logic in notebooks?), the
-   repetitive tasks, and where people get it wrong. The `setup-analyzer` agent does
-   this read-only.
-2. **Decide the blocks** from the table above. Favor a small, sharp set.
+1. **Analyze the repo** — the `setup-analyzer` agent does this read-only, across
+   **nine determinants**: what the repo is + its *domain inner loop* (the function
+   chain that makes the product artifact); the *one rule that overrides others*
+   (recall-first? frozen branch? no logic in notebooks?); repetitive workflows;
+   failure-prone spots incl. *silent-drift/parity invariants*; existing setup + *is
+   it still true* (stale-block check); *feedback-loop economics* (cost of one
+   iteration → a pre-push gate); *direction of travel & product value*;
+   *environment executability* (can a gate even run here); and *questions for the
+   owner*. It first mines session transcripts if any exist, and switches to
+   **greenfield mode** (interview-led, defer-and-note) on an empty repo.
+2. **Decide the blocks** from the table above. Favor a small, sharp set. Mark each
+   block's **target**: `active`, or `tools-pool/<topic>` for a fully-built block
+   parked for a later phase (see "Tool pool" below).
 3. **Scaffold** the skeleton with the hub tool:
    ```bash
    python tools/scaffold_claude_setup.py init claude-setups/<repo> --with-claude-md
