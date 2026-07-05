@@ -10,3 +10,12 @@
 [submodule "references/caveman"]
 	path = references/caveman
 	url = https://github.com/JuliusBrussee/caveman.git
+[submodule "references/sdd"]
+	path = references/sdd
+	url = https://github.com/094459/sdd.git
+[submodule "references/spec-driven-development-workshop"]
+	path = references/spec-driven-development-workshop
+	url = https://github.com/094459/spec-driven-development-workshop.git
+[submodule "references/claude-code-best-practice"]
+	path = references/claude-code-best-practice
+	url = https://github.com/shanraisshan/claude-code-best-practice.git

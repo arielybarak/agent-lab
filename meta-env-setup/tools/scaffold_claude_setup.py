@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Scaffold a Claude Code setup (``.claude/``) for any repository.
 
-Meta-tooling for the ``agents_sendbox`` hub. Bootstrapping a Claude Code
+Meta-tooling for the ``agent-lab`` hub. Bootstrapping a Claude Code
 configuration — skills, slash commands, subagents, hooks, settings — is a
 repetitive, boilerplate-heavy task, so this turns it into one-liners instead of
 hand-copying templates every time a new repo needs an AI setup.

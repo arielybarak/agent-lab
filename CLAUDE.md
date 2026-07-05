@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-`agents_sendbox` is a **collection hub**, not an application. It gathers AI-agent tooling
+`agent-lab` is a **collection hub**, not an application. It gathers AI-agent tooling
 (skills, plugins, project templates, workshops) to study and remix, with the long-term goal
 of assembling one "perfect" agent setup for new projects. Three kinds of content live here:
 

@@ -10,7 +10,7 @@ plus a prior gap-analysis pass that produced 7 proposed diffs to
 detection gaps (generalized, consolidated into item 1) and adds pipeline/tool
 changes the prior pass missed because it assumed every fix was analyzer prose.
 
-All paths relative to `/home/barak/agents_sendbox/meta-env-setup/` unless absolute.
+All paths relative to `/home/barak/agent-lab/meta-env-setup/` unless absolute.
 
 ---
 

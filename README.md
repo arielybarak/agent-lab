@@ -1,4 +1,4 @@
-# agents_sendbox
+# agent-lab
 
 A **portfolio of agent infrastructure work** — building, evaluating, and operating AI agents
 with Claude Code and GitHub Copilot.
@@ -15,7 +15,6 @@ Three things this repo demonstrates:
 | Path | What it is |
 |---|---|
 | [`meta-env-setup/`](meta-env-setup/) | **Claude Code setup kit** — scaffolder, validator + effectiveness scorer, per-repo setups, eval harness. Self-contained: `cd meta-env-setup` to use it. |
-
 | [`initial-sendbox/`](initial-sendbox/) | **GitHub Copilot Agent Mode setup** — custom agents, skills, hooks, instructions. The predecessor to the Claude Code work above. |
 | [`agent-eval-kit/`](agent-eval-kit/) | **Planned:** end-to-end agent + task suite + LLM judge + CI gate. See [README](agent-eval-kit/README.md). |
 | [`references/`](references/) | External repos as **git submodules** — upstream skills, templates, workshops. Read-only. See [`references/README.md`](references/README.md). |
@@ -29,7 +28,7 @@ Everything under `references/` is a pinned git submodule.
 
 ```bash
 # Clone with all submodules
-git clone --recurse-submodules https://github.com/arielybarak/agents_sendbox
+git clone --recurse-submodules https://github.com/arielybarak/agent-lab
 
 # Already cloned without --recurse-submodules?
 git submodule update --init --recursive

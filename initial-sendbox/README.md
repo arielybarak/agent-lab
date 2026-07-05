@@ -2,7 +2,7 @@
 
 My **first AI-agent setup** — a sandbox built around **GitHub Copilot Agent Mode** for
 practicing AI-assisted development, alongside the [GeekAcademy 2026](https://geekacademy.co.il)
-program. It now lives as one folder inside the [`agents_sendbox`](../README.md) hub: the
+program. It now lives as one folder inside the [`agent-lab`](../README.md) hub: the
 baseline that the eventual "perfect setup" will improve on.
 
 You don't "run" this — you open it in VS Code and use it as a launchpad for AI-powered
@@ -129,7 +129,7 @@ Lifecycle automation in `hooks/` (see `hooks/README.md` for details):
 ## Setup
 
 ```bash
-# from the agents_sendbox hub root
+# from the agent-lab hub root
 code initial-sendbox
 ```
 1. Open the Copilot Chat panel (`Ctrl+Alt+I`).
