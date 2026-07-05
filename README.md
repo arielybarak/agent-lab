@@ -1,12 +1,24 @@
 # agent-lab
 
-A **portfolio of agent infrastructure work** — building, evaluating, and operating AI agents
-with Claude Code and GitHub Copilot.
+**A hub for AI-agent tooling — setups I build, evaluate, and study.**
 
-Three things this repo demonstrates:
-- **Meta-tooling with an opinion:** a scaffolder + validator that scores Claude Code setups on effectiveness, context budget, and least-privilege — not just structure.
-- **AI-assisted engineering under real constraints:** a purpose-built Claude Code workspace for a 24-hour hardware hackathon (FPGA + ESP32), designed around a tight token budget.
-- **Evaluation as engineering:** a methodology + harness for measuring whether an agent setup actually works, not just whether it looks right.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+`agent-lab` gathers the agent infrastructure I build and the upstreams I learn from,
+with one goal: assemble a rigorous, reusable setup for new projects. It's a
+**collection, not a single app** — each part below has its own README.
+
+---
+
+## Flagship — `meta-env-setup/`
+
+A small, dependency-free Python toolkit that **scaffolds** a Claude Code `.claude/`
+setup (skills, slash-commands, agents) and then **grades** it — effectiveness,
+context budget, and least-privilege — instead of just checking that it parses.
+Grading its *own* setup scores **93/100**.
+
+→ Quickstart, scoring rubric, and per-repo setups:
+**[`meta-env-setup/README.md`](meta-env-setup/README.md)**
 
 ---
 
@@ -14,11 +26,26 @@ Three things this repo demonstrates:
 
 | Path | What it is |
 |---|---|
-| [`meta-env-setup/`](meta-env-setup/) | **Claude Code setup kit** — scaffolder, validator + effectiveness scorer, per-repo setups, eval harness. Self-contained: `cd meta-env-setup` to use it. |
-| [`initial-sendbox/`](initial-sendbox/) | **GitHub Copilot Agent Mode setup** — custom agents, skills, hooks, instructions. The predecessor to the Claude Code work above. |
-| [`agent-eval-kit/`](agent-eval-kit/) | **Planned:** end-to-end agent + task suite + LLM judge + CI gate. See [README](agent-eval-kit/README.md). |
+| [`meta-env-setup/`](meta-env-setup/) | **Flagship.** The Claude Code setup kit above — scaffold + grade + eval. Self-contained; has its own README. |
+| [`skills/`](skills/) | Reusable Claude skills — `skill-creator` (the official Anthropic skill, vendored) and a lighter first-party `skill-creator-lite`. |
+| [`docs/roadmap/`](docs/roadmap/) | Design docs for the next builds — see [Roadmap](#roadmap). |
 | [`references/`](references/) | External repos as **git submodules** — upstream skills, templates, workshops. Read-only. See [`references/README.md`](references/README.md). |
-| [`FUTURE_IDEAS.md`](FUTURE_IDEAS.md) | Backlog of things to build next (MCP server, cost tracking, prompt injection tests, Copilot vs Claude Code comparison). |
+| [`scripts/`](scripts/) | Small utilities (e.g. a Claude Code status-line renderer). |
+| `initial-sendbox/` | An earlier **GitHub Copilot Agent Mode** experiment — predecessor to the Claude Code work. Kept for reference. |
+
+---
+
+## Roadmap
+
+Ideas live in [`FUTURE_IDEAS.md`](FUTURE_IDEAS.md); once one has a real thesis it
+graduates to a spec in [`docs/roadmap/`](docs/roadmap/):
+
+- **[Agent Eval Kit](docs/roadmap/agent-eval-kit.md)** — a runnable agent + curated
+  task suite + calibrated LLM-as-judge + a CI gate that fails on quality regressions.
+  Takes grading from *static config* to *runtime behavior*.
+- **[Cross-Format Converter](docs/roadmap/cross-format-converter.md)** — translate a
+  setup between Claude Code and Google Antigravity and report *translation fidelity*
+  (what converts clean, what's lossy, what's dropped).
 
 ---
 
@@ -27,15 +54,9 @@ Three things this repo demonstrates:
 Everything under `references/` is a pinned git submodule.
 
 ```bash
-# Clone with all submodules
-git clone --recurse-submodules https://github.com/arielybarak/agent-lab
-
-# Already cloned without --recurse-submodules?
+# Cloned without --recurse-submodules? Pull them in:
 git submodule update --init --recursive
 
-# Add a new reference
-git submodule add <repo-url> references/<short-name>
-
-# Update one reference to its latest upstream
+# Update one reference to its latest upstream:
 git submodule update --remote references/<short-name>
 ```

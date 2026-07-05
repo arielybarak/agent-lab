@@ -9,3 +9,8 @@ __pycache__/
 
 # Per-repo Claude Code setups (generated output, installed into target repos)
 meta-env-setup/claude-setups/
+
+# Never commit personal documents or real secrets
+*_CV.pdf
+.env
+!.env.example
