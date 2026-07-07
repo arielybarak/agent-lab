@@ -18,6 +18,7 @@ taking.
 | [`sdd/`](sdd/) | `094459/sdd` | **Spec-driven development** — core material. |
 | [`sdd-workshop/`](sdd-workshop/) | `094459/sdd-workshop` | **Spec-driven development** — workshop form of the above. |
 | [`spec-driven-development-workshop/`](spec-driven-development-workshop/) | `094459/spec-driven-development-workshop` | Another **SDD workshop** variant from the same author. |
+| [`spec-kit/`](spec-kit/) | `github/spec-kit` | GitHub's own **Spec-Driven Development toolkit** (`specify` CLI) — turns a spec into an executable plan via `/constitution`, `/specify`, `/plan`, `/tasks`, `/implement` slash commands, multi-agent support. Borrow: the phased spec→plan→tasks command structure, directly relevant to `course-factory`'s own phased pipeline. |
 
 > The three `094459/*` repos (`sdd`, `sdd-workshop`, `spec-driven-development-workshop`) overlap —
 > keep them together and pick the freshest when borrowing.

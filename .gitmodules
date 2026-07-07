@@ -19,3 +19,6 @@
 [submodule "references/claude-code-best-practice"]
 	path = references/claude-code-best-practice
 	url = https://github.com/shanraisshan/claude-code-best-practice.git
+[submodule "references/spec-kit"]
+	path = references/spec-kit
+	url = https://github.com/github/spec-kit.git
