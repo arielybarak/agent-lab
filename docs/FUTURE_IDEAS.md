@@ -125,6 +125,68 @@ Either answer is worth writing up, and it sharpens the rubric.
 
 ---
 
+## Course-factory
+
+Product ideas for the course generator (`course-factory/`). Each ties to a spec or an optional
+template module — noted inline so they're actionable when picked up. None are in the four current
+specs; they're deliberate later extensions.
+
+### More lesson/exercise formats — HTML & presentations, mixed per-artifact
+Today the lesson-format decision is `.md` by default / `.ipynb` when code-heavy (owned by spec 002,
+written into `COURSE_BRIEF.md`). Extend it to **HTML** — including slide-deck / **presentation**
+style lessons — and make the choice **per-artifact** rather than one format per course: e.g. lessons
+as HTML slides while coding exercises live in `.ipynb` or source files, or any other combination.
+Needs a format field per lesson/exercise in the syllabus + brief, and an optional renderer module
+(like *diagrams*) in `course-template/`.
+
+**Why:** Different material teaches best in different forms — presentations suit conceptual arcs,
+notebooks suit code, HTML enables interactivity. Forcing one container per course leaves teaching
+value on the table.
+
+### Inline multiple-choice comprehension checks
+Short, quick MCQs embedded **during** a lesson (not just the end-of-lesson exercise) to give and
+verify understanding as the learner goes — cheap formative checkpoints. Fits as an **opt-in template
+module** (alongside katas / diagrams / Socratic) that spec 003's lesson authoring emits when enabled,
+and the rubric (004) could check that checkpoints exist and map to the lesson's objectives. Pairs
+naturally with the fake-student learnability signal.
+
+**Why:** Active-recall checkpoints catch confusion early and reinforce as they go, at low authoring
+cost — a lighter complement to full exercises, and a second signal on whether a lesson lands.
+
+### Research teaching methods → a technique library the templates compose from
+Do a dedicated research pass on **pedagogy / instructional design** so the factory composes courses
+from proven teaching methods rather than ad-hoc structure. Store a **library of techniques + worked
+examples keyed by material/course type** (concept-heavy, code-heavy, math, history, …) that
+`course-template/` modules and the mentor-composition in specs 002/003 draw on at generation time.
+Lives as a knowledge asset next to `insights/`; could feed rubric add-ons (004) for method-fit.
+
+**Why:** Turns "mentor judgment" into a grounded, reusable catalog of what actually teaches well, so
+every generated course inherits proven methods and the best templates get better over time — the
+compounding idea (`insights/`) applied to pedagogy itself.
+
+### Borrow spec-kit's artifact discipline for the course build
+course-factory is itself authored *with* spec-kit (spec → clarify → plan → tasks → analyze, each a
+separate status-stamped document checked against a constitution). Apply that same rigor to how it
+**builds a course** at runtime:
+- Emit each phase's output as a **separate, versioned, status-stamped artifact** (like a spec's
+  `Status:` field), not just rows in `BUILD_PROGRESS.md`.
+- A **clarify-style pass** — ≤N targeted questions whose answers are encoded back into
+  `COURSE_BRIEF.md` (formalize what intake does informally today).
+- **Per-phase quality checklists as gate artifacts** (a syllabus checklist, a lesson checklist),
+  mirroring spec-kit's `checklists/requirements.md` — the gate becomes a checkable file, not only an
+  agent judgment.
+- An **analyze-style cross-artifact consistency check** (brief ↔ syllabus ↔ skeletons ↔ lessons) that
+  catches drift the per-phase gates miss — the sibling of 004's course-level grading.
+- A per-course **decisions / seam log** (like `specs/README.md`'s *Resolved decisions*) so a resumed
+  build honors settled calls. Ties to specs **001** (phase artifacts + resume) and **004** (analyze ≈
+  course-level consistency), with the pedagogy constitution ↔ rubric as the governing-doc analog.
+
+**Why:** The same discipline that keeps *building the factory* coherent across sessions — small
+reviewable artifacts, targeted clarify, cross-artifact analyze — is exactly what a long, multi-session
+*course* build needs. We're already living proof the method works; point it at the output too.
+
+---
+
 ## Notes
 - Ideas here are *not* prioritized against each other — pick based on what's most interesting
   and what the portfolio needs at the time.
