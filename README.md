@@ -6,7 +6,9 @@
 
 `agent-lab` gathers the agent infrastructure I build and the upstreams I learn from,
 with one goal: assemble a rigorous, reusable setup for new projects. It's a
-**collection, not a single app** — each part below has its own README.
+**collection, not a single app** — each part below has its own README. It's also a running
+set of **experiments in AI-assisted engineering**: increasingly the *method* is part of the
+work, not just the tools — see [Spec-Driven Development](#method--spec-driven-development-sdd).
 
 ---
 
@@ -32,12 +34,29 @@ An **end-to-end kit for building, measuring, and evolving Claude Code environmen
 
 ---
 
+## Method — Spec-Driven Development (SDD)
+
+Everything new here is built **spec-first**, with an AI-assisted [Spec-Driven Development](https://github.com/github/spec-kit)
+workflow rather than prompting a model straight into code. Each feature moves through explicit,
+reviewable artifacts — **spec → clarify → plan → tasks → analyze** — governed by a per-project
+**constitution** of non-negotiable principles, so the AI's work stays grounded, auditable, and
+resumable across sessions.
+
+`course-factory` is the current worked example: its four subject-specs
+([`specs/course-factory/`](specs/course-factory/)) were each authored and clarified this way,
+against a ratified [constitution](.specify/memory/course-factory/constitution.md). **SDD is the
+default for every project from here on** — the methodology itself, and these experiments running
+real AI agents through it, are as much what this repo is showing as the tools they produce.
+
+---
+
 ## Layout
 
 | Path | What it is |
 |---|---|
 | [`meta-env-setup/`](meta-env-setup/) | **Flagship.** The Claude Code setup kit above — scaffold + grade + eval. Self-contained; has its own README. |
-| [`course-factory/`](course-factory/) | **In design.** A topic-agnostic course generator — feed it a course spec, it researches, drafts, and quality-gates a full course (generalizing the method behind `System_Design_SelfLearn`). Design doc only for now; see its README. |
+| [`course-factory/`](course-factory/) | **In design (spec-first).** A topic-agnostic course generator — feed it a course spec, it researches, drafts, and quality-gates a full course (generalizing the method behind `System_Design_SelfLearn`). Its build is decomposed into **four SDD subject-specs** ([`specs/course-factory/`](specs/course-factory/)), all clarified; design doc + specs, see its README. |
+| [`specs/`](specs/) + [`.specify/`](.specify/) | **Spec-Driven Development.** Per-feature specs (spec → plan → tasks) plus the spec-kit engine and per-project **constitution** that drive them. See [Method](#method--spec-driven-development-sdd). |
 | [`skills/`](skills/) | Reusable Claude skills — `skill-creator` (the official Anthropic skill, vendored) and a lighter first-party `skill-creator-lite`. |
 | [`docs/roadmap/`](docs/roadmap/) | Design docs for the next builds — see [Roadmap](#roadmap). |
 | [`references/`](references/) | External repos as **git submodules** — upstream skills, templates, workshops. Read-only. See [`references/README.md`](references/README.md). |
