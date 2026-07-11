@@ -13,7 +13,7 @@
 This is **spec #4 of four subject-specs**. It owns the **only definition of quality** in the factory
 and everything that definition feeds. Its center is a **single rubric** (one-rubric-two-layers); its
 outputs are the **graded scorecard** the course-evaluator emits, the delivered **`COURSE_REPORT.md`**
-that certifies a course to the user, the **`FEEDBACK.md` → `insights/` harvest** that makes the
+that reports a course's graded quality to the user, the **`FEEDBACK.md` → `insights/` harvest** that makes the
 factory compound, and **`comparison/`**, which proposes revisions to that one rubric from external
 courses.
 
@@ -22,6 +22,28 @@ authoring, and the course-evaluator + report + harvest run at (and after) **deli
 001 orchestrates. 004 defines the rubric and owns the course-level grading and the report contents;
 001 owns *when* delivery happens and the folder contract, 002 owns the grounding store the evaluator
 reads, and 003 owns the *per-lesson application* of the rubric.
+
+### Plannable increments — this spec bundles four loosely-coupled subsystems
+
+This spec.md covers four subjects at very different points on the critical path: **US1** (the rubric
++ gate contract) is **003's hard prerequisite** — nothing in the lesson phase can run without it.
+**US2** (course-evaluator + `COURSE_REPORT.md`) gates delivery. **US3** (harvest) and **US4**
+(`comparison/`) are **post-MVP** by this spec's own priority ordering (P3/P4) and by the README's
+build order, which already builds 004 in two separated chunks: *rubric core* (before 003) and
+*delivery/harvest/comparison* (last).
+
+**US1 is independently plannable and taskable, ahead of and without waiting on US2–US4.** A
+`/speckit-plan` + `/speckit-tasks` pass scoped to US1 alone is sufficient to unblock 003; US2's
+delivery-time grading, US3's harvest, and US4's `comparison/` can be planned and built later, on their
+own schedule, without re-planning US1. Treat this spec.md as pre-decomposed by priority, not as a
+single monolithic planning unit.
+
+**Recommended follow-up (not done in this pass):** if a single `/speckit-plan` bundling all four
+subjects becomes unwieldy in practice, consider formally splitting this spec into two spec-kit
+features via `/speckit-specify` — e.g. a `004-rubric-core` (US1) and a `004a-delivery-harvest-comparison`
+(US2–US4) — so each gets its own `plan.md`/`tasks.md` lifecycle. That is a repo-restructuring decision
+(new directories, a fresh `/speckit-specify` pass, re-deriving cross-references) left to the user to
+decide when it's actually needed, not executed here.
 
 ### Out of Scope (owned by other specs)
 
@@ -39,6 +61,14 @@ reads, and 003 owns the *per-lesson application* of the rubric.
   004 owns **harvesting** `FEEDBACK.md` up into `insights/`, not the per-critique writing.
 - **`/improve-course` backlog execution** — 004's `comparison/` *feeds* that backlog with per-course
   reports; acting on the backlog is the template's `/improve-course` command, not this spec.
+- **The pedagogy technique library (`pedagogy/`) as a rubric method-fit add-on input** — a deferred,
+  optional candidate for the topic-add-on layer already generic in (1) above; not required for the
+  rubric core. See `course-factory/pedagogy/README.md`.
+- **An analyze-style cross-artifact consistency check** (brief ↔ syllabus ↔ skeletons ↔ lessons) —
+  a deferred sibling to the course-evaluator's independent course-level verdict, catching drift the
+  per-phase gates miss.
+
+  Both tracked in `course-factory/DESIGN.md` § Deferred extensions.
 
 ## Clarifications
 
@@ -71,7 +101,9 @@ gate and the course-evaluator can run on it as the engine.
 **Why this priority**: The rubric is the foundational contract for the whole quality system and a
 hard prerequisite for spec 003 (which consumes it as its gate). Nothing downstream — grading, the
 report, comparison — means anything without a single agreed definition of quality. It is
-independently valuable: a well-formed, two-layer, single-source rubric is testable on its own.
+independently valuable: a well-formed, two-layer, single-source rubric is testable on its own. This
+independence extends to **planning**: US1 can proceed through `/speckit-plan` and `/speckit-tasks` on
+its own, ahead of and without blocking on US2–US4 (see "Plannable increments" under Overview).
 
 **Independent Test**: Inspect the rubric; confirm it has the generic core plus a mechanism for
 spec-requested topic add-ons, that it is the only quality definition in the repo (no rival rubric),
@@ -91,13 +123,13 @@ and that it exposes a pass/fail gate a lesson evaluator (003) can apply.
 
 ---
 
-### User Story 2 - Grade a course and emit the certifying COURSE_REPORT.md (Priority: P2)
+### User Story 2 - Grade a course and emit the graded COURSE_REPORT.md (Priority: P2)
 
-At delivery, the course-evaluator applies the rubric to the finished course, spot-checks that cited
-claims trace to real `SOURCES.md` entries (tracing, not truth) while honoring 002's mentor-added /
+At delivery, the course-evaluator applies the rubric to the finished course, checks that every cited
+claim traces to a real `SOURCES.md` entry (tracing, not truth) while honoring 002's mentor-added /
 thin-grounding tags, and emits a graded scorecard. The `/course-report` command writes that scorecard
-to `COURSE_REPORT.md` — rubric scores, wins, cleanups, and a verdict — certifying the course to the
-user, distinct from `FEEDBACK.md`.
+to `COURSE_REPORT.md` — rubric scores, wins, cleanups, and a verdict — reporting the course's quality
+to the user, distinct from `FEEDBACK.md`.
 
 **Why this priority**: This is the factory's quality certificate — the artifact that tells the user
 "this course meets the bar." It builds on US1's rubric and turns it into a graded, delivered report.
@@ -106,21 +138,21 @@ Testable given a finished course and the rubric.
 **Independent Test**: Given a finished course and the rubric, run the course-evaluator; confirm it
 produces a scorecard with per-dimension scores, wins, cleanups, and a verdict; confirm an unresolvable
 `[Sn]` citation is flagged as a traceability finding while a claim explicitly marked mentor-added is
-**not** flagged for lacking an `[Sn]`; confirm `COURSE_REPORT.md` is written and reads as a
-certification distinct from `FEEDBACK.md`.
+**not** flagged for lacking an `[Sn]`; confirm `COURSE_REPORT.md` is written and reads as a quality
+report distinct from `FEEDBACK.md`.
 
 **Acceptance Scenarios**:
 
 1. **Given** a finished course, **When** the course-evaluator runs, **Then** it applies the rubric
    and emits a scorecard with per-dimension scores, wins, cleanups, and a verdict.
 2. **Given** a lesson claim citing `[Sn]`, **When** the evaluator checks grounding, **Then** it
-   spot-checks that the key resolves to a real `SOURCES.md` entry — verifying **tracing, not truth** —
-   and flags an unresolvable citation.
+   checks that the key resolves to a real `SOURCES.md` entry — verifying **tracing, not truth** —
+   and flags an unresolvable citation; this check runs on every citation, not a sample.
 3. **Given** a claim explicitly marked **mentor-added** (per 002's compose-and-flag policy), **When**
    the evaluator checks grounding, **Then** it does **not** fail the claim for lacking an `[Sn]`, and
    it preserves the thin-grounding flags rather than re-presenting them as sourced.
 4. **Given** the scorecard, **When** `/course-report` runs, **Then** `COURSE_REPORT.md` is written
-   with the scores + verdict and certifies the course to the user, distinct in purpose from
+   with the scores + verdict and reports the course's quality to the user, distinct in purpose from
    `FEEDBACK.md`.
 5. **Given** grading reveals a course-level gap after all lessons already passed, **When** it is
    recorded, **Then** it surfaces as a forward diff / `/improve-course` backlog item and does **not**
@@ -210,9 +242,13 @@ revision is deliberately adopted.
 
 **The rubric — the single definition of quality**
 
-- **FR-001**: The factory MUST define quality with **exactly one** rubric: a **generic core**
-  (correctness, grounding, flow, coverage, practicality) plus **optional topic add-ons** the course
-  spec can request. It is the **sole** definition of quality; no rival rubric may exist anywhere.
+- **FR-001**: The factory MUST define quality with **exactly one** rubric: the generic core **named
+  and defined by 000 FR-013** (five dimensions: Technical Correctness, Grounding/No-Fabrication,
+  Pedagogical Flow, Coverage, Practicality — 000 owns that canonical list; this spec does not
+  re-derive it) plus **optional topic add-ons** the course spec can request. It is the **sole**
+  definition of quality; no rival rubric may exist anywhere. 004 owns the rubric's **grading
+  semantics** (weights, per-dimension thresholds, the hard-gate rule); 000 owns the **shape and
+  core-dimension list** as the template asset.
 - **FR-002**: The generic core MUST apply to **every** course; a topic add-on MUST apply **only** when
   the course spec / `COURSE_BRIEF.md` requests it. An unknown/unavailable requested add-on MUST be
   surfaced, not silently dropped.
@@ -224,18 +260,28 @@ revision is deliberately adopted.
   **and** every requested topic add-on MUST clear its own minimum bar; a lesson or course passes only
   if **no** dimension falls below its threshold (a strong dimension MUST NOT mask a failing one).
   Per-dimension scores MUST still be retained for the scorecard even though the gate is derived from
-  the thresholds. This is the pass contract spec 003 consumes per lesson.
+  the thresholds. This is the pass contract spec 003 consumes per lesson. **The concrete scale (e.g.,
+  1–5) and each dimension's minimum-bar value are owned by this spec's `/speckit-plan`**, not fixed
+  here, and MUST be recorded alongside the rubric version (FR-005) so a course's pass/fail is
+  reproducible against the exact thresholds that graded it.
 - **FR-005**: The rubric MUST be **versioned**, so a course records which rubric version graded it and
   `comparison/` can propose revisions against a known baseline; revisions extend the **single** rubric
-  and never create a second.
+  and never create a second. **The rubric's version identity IS the template's version stamp** (000
+  FR-016) — the factory maintains **one** version identity across the template and its rubric asset,
+  never an independent rubric-only counter. Adopting a proposed revision re-stamps the template via
+  000's narrower rubric-only revision path (000 Edge Cases: "a rubric revision proposed by
+  `comparison/` is adopted after v1"), not a full re-distillation.
 
 **Course-evaluator**
 
 - **FR-006**: The course-evaluator MUST apply the rubric to a finished course and emit a **graded
   scorecard**: per-dimension scores, wins, cleanups, and a verdict.
-- **FR-007**: The evaluator MUST spot-check **citation traceability** — that each `[Sn]` key resolves
-  to a real `SOURCES.md` entry — verifying **tracing, not truth**, and MUST flag any unresolvable
-  citation.
+- **FR-007**: The evaluator MUST check **citation traceability for every `[Sn]` key in the course** —
+  that each resolves to a real `SOURCES.md` entry — verifying **tracing, not truth**, and MUST flag
+  any unresolvable citation. Resolution is a cheap, mechanical lookup, unlike verifying truth, so the
+  check is exhaustive, not sampled (mirrors 003 FR-011 — this is the factory's **canonical**
+  citation/grounding contract; 002 and 003 apply it at their own granularity rather than re-deriving
+  it).
 - **FR-008**: The evaluator MUST honor 002's **compose-and-flag** thin-grounding policy: a claim
   explicitly marked **mentor-added** MUST NOT be failed merely for lacking an `[Sn]`, and
   thin-grounding flags MUST be preserved, never re-presented as sourced.
@@ -248,16 +294,20 @@ revision is deliberately adopted.
   as a **forward diff / `/improve-course` backlog item** and MUST NOT re-open or re-flow a passed
   phase (honoring 001 FR-023).
 
-**COURSE_REPORT.md — certification**
+**COURSE_REPORT.md — quality report**
 
 - **FR-011**: The `/course-report` command MUST generate **`COURSE_REPORT.md`** from the evaluator's
-  scorecard, holding rubric scores, wins, cleanups, and the verdict, and MUST **certify the course to
-  the user**. 004 owns the report's generation and contents; 001 owns invoking it at delivery.
-- **FR-012**: `COURSE_REPORT.md` MUST be **distinct in purpose** from `FEEDBACK.md`: the report
-  certifies quality **to the user**; `FEEDBACK.md` feeds improvement back **into the factory**. The
-  two MUST NOT be merged.
+  scorecard, holding rubric scores, wins, cleanups, and the verdict, and MUST **report the course's
+  graded quality to the user**. This report MAY carry a "needs work" verdict (FR-009) — it is
+  delivered as-is in that case, never withheld or blocked, and the gap feeds the `/improve-course`
+  backlog (FR-010) rather than gating delivery (001 FR-011/FR-021). 004 owns the report's generation
+  and contents; 001 owns invoking it at delivery and treats the report's **generation**, not its
+  verdict, as satisfying the delivery gate.
+- **FR-012**: `COURSE_REPORT.md` MUST be **distinct in purpose** from `FEEDBACK.md`: the report tells
+  the user the course's **graded quality** (pass or needs-work); `FEEDBACK.md` feeds improvement back
+  **into the factory**. The two MUST NOT be merged.
 - **FR-013**: The report MUST record the **rubric version** used to grade the course (per FR-005), so
-  a certification is reproducible and re-syncable.
+  its grading is reproducible and re-syncable.
 
 **FEEDBACK.md → insights/ harvest**
 
@@ -281,7 +331,12 @@ revision is deliberately adopted.
   `/improve-course` backlog.
 - **FR-019**: `comparison/` MUST NOT keep a **rival rubric**; it only proposes revisions to the single
   rubric, and a proposed revision MUST NOT auto-mutate the live rubric — adoption is a deliberate,
-  reviewed step, and grading uses the current adopted version until then.
+  reviewed step, and grading uses the current adopted version until then. **Minimal adoption
+  protocol**: the factory maintainer reviews a proposed revision against real course evidence and
+  explicitly approves or rejects it; an approved revision is logged as a **provenance record** in the
+  template (000's provenance mechanism, 000 FR-019) citing the `comparison/` proposal, and its
+  adoption re-stamps the template's version (000's rubric-only revision path, 000 Edge Cases) — the
+  stamp bump **is** the adoption record.
 
 ### Key Entities
 
@@ -292,18 +347,26 @@ revision is deliberately adopted.
   layered on the core.
 - **Pass/fail gate contract** — the form of the rubric that spec 003 consumes per-lesson and the
   course-evaluator runs course-wide.
-- **Course-evaluator** — the course-level grader that applies the rubric, spot-checks traceability,
-  honors mentor-added tags, and emits the scorecard.
+- **Course-evaluator** — the course-level grader that applies the rubric, checks every citation's
+  traceability, honors mentor-added tags, and emits the scorecard.
 - **Scorecard** — per-dimension scores + wins + cleanups + verdict; the evaluator's output.
 - **Verdict** — the course-level pass/needs-work judgment recorded in the scorecard and report.
-- **Traceability spot-check** — verification that an `[Sn]` claim resolves to a real source (tracing,
-  not truth).
+- **Traceability check** — verification that **every** `[Sn]` claim in the course resolves to a real
+  source (tracing, not truth) — exhaustive, not a spot-check, since resolution is a cheap mechanical
+  lookup.
 - **Mentor-added tag / thin-grounding flag** — 002's markings the evaluator honors and preserves.
-- **COURSE_REPORT.md** — the delivered certification (scores + verdict + rubric version), generated by
-  `/course-report`; distinct from `FEEDBACK.md`.
+- **COURSE_REPORT.md** — the delivered quality report (scores + verdict + rubric version), generated by
+  `/course-report`; distinct from `FEEDBACK.md`. Its presence, not a passing verdict, satisfies 001's
+  delivery gate (001 FR-011).
 - **FEEDBACK.md** — the per-course critique file harvested up into `insights/`.
 - **insights/ digest** — the append-only cross-course knowledge store the factory compounds into and
-  reads from.
+  reads from. **Form**: a small set of topic-organized `.md` files under `insights/` (e.g. one per
+  recurring theme — anti-fabrication, running-example design, estimation method, kata design,
+  mirroring the categories `course-factory/DESIGN.md` already names), each entry dated and sourced to
+  the course it was harvested from; readers (001/002/003) load the whole directory as one digest.
+  Exact file layout is a `/speckit-plan`-level detail; this spec fixes only that it is knowledge-only
+  markdown, append-only, and directory-shaped (not one monolithic file, to keep individual harvests
+  small diffs). Starts **empty** — no pre-existing corpus is seeded from the reference course.
 - **Harvest** — the user-invoked mechanism (per-insight capture + `setup-retro`-style bulk harvest;
   no automatic trigger) that pumps `FEEDBACK.md` into `insights/`.
 - **comparison/** — the external-course analysis that proposes rubric revisions and per-course
@@ -328,9 +391,10 @@ revision is deliberately adopted.
   the verdict, and the rubric version, and is distinct from `FEEDBACK.md`.
 - **SC-006**: Grading re-opens a passed, gated phase **0** times; every course-level gap found at
   grading is recorded as a forward diff / backlog item (consistent with 001 FR-023).
-- **SC-007**: When the user invokes the harvest, **100%** of the non-empty `FEEDBACK.md` content is
-  appended into `insights/` (append-only, **0** clobbered prior insights, **0** errors on an empty
-  `FEEDBACK.md`); the harvest fires on **0** automatic/scheduled triggers.
+- **SC-007**: When the user invokes the harvest, **every critique** in a non-empty `FEEDBACK.md` is
+  **represented** in `insights/` (distilled, not necessarily verbatim — **0** critiques silently
+  dropped), append-only (**0** clobbered prior insights, **0** errors on an empty `FEEDBACK.md`); the
+  harvest fires on **0** automatic/scheduled triggers.
 - **SC-008**: **100%** of `comparison/` outputs target the single rubric (proposed revisions) — **0**
   rival rubrics created — and the live rubric is unchanged until a revision is deliberately adopted.
 - **SC-009**: The same rubric grades both the lesson gate (003) and the course-evaluator (004) in
@@ -361,3 +425,10 @@ revision is deliberately adopted.
   per-critique writing.
 - **`insights/` may be empty early** in the factory's life; the harvest appends to it and downstream
   readers treat an empty digest as valid.
+- **`comparison/`'s source-course selection reuses 002's reliability-weighing discipline** (002
+  FR-002, Principle II/III) — stars are a green-flag signal, not proof; "well-made" is judged the same
+  way 002 judges a source's reliability, not by a separate rubric for candidate selection.
+- **`comparison/`'s analysis process reuses 002's research method** (research → weigh reliability →
+  cite → converge-or-budget, also mirrored in `pedagogy/`'s build) rather than inventing a third
+  research discipline — it is not a new method, just a different corpus (external courses instead of
+  a single topic's sources).

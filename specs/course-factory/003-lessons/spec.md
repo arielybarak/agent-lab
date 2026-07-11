@@ -46,6 +46,17 @@ Two seams it consumes rather than owns:
   and **002** (`.md`/`.ipynb`). 003 reads both and authors lessons in the decided format.
 - **Harvesting `FEEDBACK.md` into `insights/`** — spec **004**. 003 *reads* the insights digest as an
   author input; it does not produce or harvest it.
+- **Inline mid-lesson comprehension checks (MCQs)** — a deferred, opt-in `course-template/` module
+  (would slot alongside katas/diagrams/Socratic), not this spec's initial scope.
+- **A per-phase quality checklist for the skeleton/lesson gates, and status-stamping the skeleton
+  batch / lessons as artifacts** — deferred, spec-kit-style additions to this spec's gates.
+- **Consuming `pedagogy/`'s `[Pn]`-keyed technique catalog** — built and populated (2026-07-10) but
+  not yet wired into any spec. When it is wired in, this spec's citation contract (FR-011, currently
+  `[Sn]`-or-mentor-added) will need a `[Pn]` slot alongside `[Sn]` (see
+  `course-factory/pedagogy/README.md` § Consumption points). Not required for this spec's initial
+  scope.
+
+  All tracked in `course-factory/DESIGN.md` § Deferred extensions.
 
 ## Clarifications
 
@@ -103,9 +114,10 @@ approval **without auto-advancing** to the lesson phase.
 
 For each lesson, the factory spins up a **fresh-context author** and a **separate author-blind
 evaluator**, and the orchestrating session mediates their author → critique → refine loop, keeping
-**two pairs in flight** at a time. Each lesson is graded against 004's rubric as the gate, every
-claim carries an `[Sn]` citation, and the evaluator spot-checks that each citation resolves to a real
-source. Per-lesson status is written to `BUILD_PROGRESS.md` as lessons finish.
+**at most `pool_width` pairs in flight** at a time (MVP: 1; target: 2). Each lesson is graded against
+004's rubric as the gate, every claim carries an `[Sn]` citation, and the evaluator checks that every
+citation resolves to a real source. Per-lesson status is written to `BUILD_PROGRESS.md` as lessons
+finish.
 
 **Why this priority**: This is the phase's core output — the actual lessons. It builds on the
 approved skeletons from US1 and turns each into graded, grounded content. Testable on its own given
@@ -113,8 +125,8 @@ an approved skeleton set and the rubric.
 
 **Independent Test**: Given approved skeletons, a `SOURCES.md`, and the rubric, run the lesson pool;
 confirm each lesson's author starts from a fresh context with the specified inputs, the evaluator
-never receives the author's reasoning, at most two pairs run concurrently, each lesson is graded
-against the rubric, an unresolvable `[Sn]` citation fails the traceability spot-check, and each
+never receives the author's reasoning, at most `pool_width` pairs run concurrently, each lesson is
+graded against the rubric, an unresolvable `[Sn]` citation fails the traceability check, and each
 lesson's terminal status is recorded in `BUILD_PROGRESS.md`.
 
 **Acceptance Scenarios**:
@@ -125,15 +137,15 @@ lesson's terminal status is recorded in `BUILD_PROGRESS.md`.
 2. **Given** an authored lesson, **When** the evaluator subagent grades it, **Then** the evaluator is
    **author-blind** — it receives the lesson and the grading inputs but never the author's private
    reasoning.
-3. **Given** several lessons to draft, **When** the pool runs, **Then** at most **two** author–critic
-   pairs are in flight at once (fan-out / fan-in), and the orchestrating session mediates each pair's
+3. **Given** several lessons to draft, **When** the pool runs, **Then** at most **`pool_width`**
+   author–critic pairs are in flight at once (fan-out / fan-in), and the orchestrating session mediates each pair's
    author → critique → refine loop.
 4. **Given** a lesson under evaluation, **When** the evaluator gates it, **Then** it grades the lesson
    against **004's rubric** and passes only if the rubric passes (subject to the same 3-round cap).
 5. **Given** a lesson with factual claims, **When** the evaluator checks grounding, **Then** every
-   claim carries an `[Sn]` key and the evaluator spot-checks **traceability** — that the key resolves
-   to a real `SOURCES.md` entry (it verifies tracing, not truth); an unresolvable citation fails the
-   check.
+   claim carries an `[Sn]` key and the evaluator checks **traceability for every citation** — that
+   each key resolves to a real `SOURCES.md` entry (it verifies tracing, not truth); an unresolvable
+   citation fails the check.
 6. **Given** a lesson reaches a terminal state (rubric-passed, or cap-hit and surfaced), **When** the
    pool records it, **Then** the lesson's per-lesson status is written to `BUILD_PROGRESS.md` before
    the pool considers that lesson done.
@@ -178,9 +190,9 @@ remaining lessons, and that the check runs **exactly once** for the course.
 - **A lesson never passes the rubric within the cap** — the pool stops at 3 rounds and emits the best
   lesson plus its scorecard for 001 to present to the user (accept-or-comment); the pool does not
   block on that lesson forever.
-- **An author cites an `[Sn]` key absent from `SOURCES.md`** — the evaluator's traceability
-  spot-check fails; the lesson does not pass the gate until the citation resolves or the claim is
-  removed. It is never passed on an unresolvable citation.
+- **An author cites an `[Sn]` key absent from `SOURCES.md`** — the evaluator's traceability check
+  fails; the lesson does not pass the gate until the citation resolves or the claim is removed. It is
+  never passed on an unresolvable citation.
 - **`SOURCES.md` is too thin to ground a lesson** — 003 follows 002's resolved thin-grounding policy
   (compose from mentor judgment, flag the thin grounding, tag affected claims mentor-added); it does
   not fabricate grounding and MUST preserve those flags/tags rather than present them as sourced. If
@@ -196,6 +208,16 @@ remaining lessons, and that the check runs **exactly once** for the course.
   re-decide the format.
 - **The insights digest is empty** (early in the factory's life) — authors proceed without it; an
   empty digest is a valid input, not a blocker.
+- **A lesson has no exercise** (possible under some profiles/modules) — the fake-student subagent
+  falls back to **read-and-report-confusion only**: it reads the lesson and reports confusion points
+  without attempting an exercise; the calibration still fixes and folds in those points (FR-014)
+  despite the missing exercise step.
+- **The orchestrating session selects the wrong or incomplete `[Sn]` entries for an author** (FR-007)
+  — the author cannot cite a source it was never given, so an under-cited claim in this case is a
+  **selection failure**, not an authoring one. The evaluator MAY flag a claim that plausibly matches
+  an *existing but unpassed* `SOURCES.md` entry as a likely selection miss (distinct from a genuinely
+  ungrounded claim), so the orchestrator's input-selection step can be corrected rather than only
+  failing the lesson.
 
 ## Requirements *(mandatory)*
 
@@ -221,7 +243,8 @@ remaining lessons, and that the check runs **exactly once** for the course.
   applying current-industry judgment, not parroting sources. Skeleton authoring MUST use a **single
   batch-level** author → critique → refine loop (one author over the whole set, one evaluator over
   the batch); the two-pairs-in-flight worker pool (FR-009) is **lesson-only** and MUST NOT be used
-  for skeletons.
+  for skeletons. **This mentor stance is factory-wide, not skeleton-specific** — FR-016 extends the
+  same "sources inform, do not dictate" rule to lesson authoring.
 - **FR-005**: The skeleton evaluator MUST check every skeleton for (a) **match to its lesson's
   topic** and (b) **clarity / good quality / simple language**, and the author MUST refine against
   the cited deltas via the shared primitive (FR-001, capped per FR-002).
@@ -233,23 +256,34 @@ remaining lessons, and that the check runs **exactly once** for the course.
 **Lesson authoring — parallel author–critic worker pool**
 
 - **FR-007**: Each lesson MUST be authored by a **fresh-context author subagent** whose inputs are
-  the `COURSE_BRIEF.md`, the frozen syllabus, that lesson's approved skeleton, the **relevant**
-  `SOURCES.md` `[Sn]` entries, and the insights digest — and no other course context.
+  the `COURSE_BRIEF.md`, the frozen syllabus **plus its `DIFFS.md` entries** (001 FR-027 — the frozen
+  artifact and its applied diffs together are the canonical read, never the frozen artifact alone),
+  that lesson's approved skeleton (plus any diffs applied against it), the **relevant** `SOURCES.md`
+  `[Sn]` entries, the insights digest, and — for any lesson beyond the first two, once the fake-student
+  calibration has run — `CALIBRATION.md` (FR-021) — and no other course context.
 - **FR-008**: Each lesson MUST be graded by a **separate, author-blind evaluator subagent** that
   receives the authored lesson and the grading inputs but **never** the author's private reasoning.
 - **FR-009**: The orchestrating session MUST mediate each author–evaluator pair's author → critique →
-  refine loop and MUST keep **at most two pairs in flight at a time** (a fan-out / fan-in worker
-  pool).
+  refine loop and MUST keep **at most `pool_width` pairs in flight at a time** (a fan-out / fan-in
+  worker pool), where `pool_width` is a **configurable parameter**. **MVP ships with `pool_width` =
+  1** (fully serial — no fan-out/fan-in mediation, no concurrent `BUILD_PROGRESS.md` writes to order);
+  the **design target is 2** once real runs validate the concurrency model. Every other FR/SC in this
+  spec is unaffected by the value of `pool_width` — a single-pair pool is a valid, degenerate case of
+  "at most `pool_width` in flight."
 - **FR-010**: Each lesson MUST be gated by **004's rubric**: the evaluator grades the lesson against
   the rubric and the lesson passes only if the rubric passes, subject to the 3-round cap (FR-002).
   003 consumes the rubric as a pass/fail gate and MUST NOT redefine its contents.
 - **FR-011**: Every factual claim in a lesson MUST either carry an `[Sn]` citation key resolving to
   `SOURCES.md` **or** be explicitly marked as **mentor-added judgment** (mirroring 002's grounding
   rule and its resolved compose-and-flag thin-grounding policy) — there MUST be no silently
-  ungrounded claim. The evaluator MUST spot-check **traceability** — that each `[Sn]` key resolves to
-  a real source entry (it verifies tracing, **not** truth) — and MUST fail a lesson whose citation
-  does not resolve or whose claim is neither cited nor marked mentor-added. Thin-grounding flags and
-  mentor-added tags inherited from 002 MUST be preserved, never re-presented as sourced.
+  ungrounded claim. The evaluator MUST check **traceability for every citation in the lesson** — that
+  each `[Sn]` key resolves to a real source entry (it verifies tracing, **not** truth) — and MUST fail
+  a lesson whose citation does not resolve or whose claim is neither cited nor marked mentor-added.
+  Resolution is a cheap, mechanical lookup against `SOURCES.md` — unlike verifying truth, it does not
+  require sampling, so the check covers every citation, not a subset (see SC-004). Thin-grounding
+  flags and mentor-added tags inherited from 002 MUST be preserved, never re-presented as sourced.
+  This is the lesson-level application of the factory's **canonical citation/grounding contract** (004
+  FR-007/FR-008); 003 applies it per lesson rather than re-deriving an independent rule.
 - **FR-012**: As each lesson reaches a terminal state (rubric-passed, or cap-hit and surfaced), the
   phase MUST write that lesson's **per-lesson status** to `BUILD_PROGRESS.md` before treating the
   lesson as done. The state file's schema and resume semantics are owned by 001; 003 only updates the
@@ -264,14 +298,19 @@ remaining lessons, and that the check runs **exactly once** for the course.
   runs once on the lesson(s) that exist; it MUST NOT block waiting for a lesson that never passes.
 - **FR-014**: The fake-student's confusion points (e.g., undefined terms, too-fast steps) MUST be
   **fixed in those two lessons** AND **folded into the drafting guidance for every remaining lesson**.
+  Because this **edits an already-passed lesson**, each edited lesson MUST be **re-graded against the
+  rubric** (FR-010) before the fake-student check is considered complete — a fix MUST NOT silently
+  regress a previously-passed dimension. If a re-grade fails, the edited lesson re-enters the
+  author→critique→refine loop (FR-001) under a fresh round cap (mirroring FR-024's change-request
+  pattern in 001).
 - **FR-015**: The fake-student check MUST run **at most once per course** — it calibrates the
   explanation format for the whole course; it MUST NOT be re-run per lesson.
 
 **Mentor stance, grounding & cross-phase seams**
 
-- **FR-016**: Both skeletons and lessons MUST be authored **as a domain mentor** — sources inform but
-  do not dictate — consistent with the factory's mentor stance; the evaluator's grounding checks are
-  about **traceability**, not about parroting sources.
+- **FR-016**: Lessons MUST be authored **as a domain mentor** — sources inform but do not dictate —
+  the same stance FR-004 already requires for skeletons (see FR-004's note); the evaluator's grounding
+  checks are about **traceability**, not about parroting sources.
 - **FR-017**: When authoring reveals a gap in an already-gated earlier artifact (the frozen syllabus,
   or an approved skeleton once the lesson phase has begun), the phase MUST surface it as an
   **explicit forward diff** applied at the current phase and MUST NOT re-open or re-flow the earlier
@@ -279,7 +318,35 @@ remaining lessons, and that the check runs **exactly once** for the course.
 - **FR-018**: The pool MUST author the **first two lessons first**, run the fake-student calibration
   (FR-013–FR-015), and **only then fan out the remaining lessons** — every remaining lesson MUST be
   authored with the calibration already folded into its drafting guidance (**gate-then-fan-out**).
-  The pool MUST NOT begin any lesson beyond the first two before the calibration completes.
+  The pool MUST NOT begin any lesson beyond the first two before the calibration completes. **While a
+  cap-surfaced first-or-second lesson awaits the author's accept-or-comment decision** (001 FR-012),
+  **the pool idles** — it does not proceed to calibration or fan-out on a partial/unaccepted terminal
+  state. This is a wait, not a skip, and matches 001's ask-moment carve-out (001 FR-014), which
+  treats this accept-or-comment decision as a gate, not a content ask-moment.
+
+**Profile consumption (000's archetype profiles)**
+
+- **FR-019**: Skeleton and lesson authoring MUST respect the course's selected archetype profile
+  (001's overlay decision, per 000 FR-022) — its scaffolding depth and the placement of any
+  **advisory** checkpoint notes (000 FR-022: never a hard gate) — without altering the shared
+  author→critique→refine primitive (FR-001) or the rubric gate (FR-010), which apply uniformly
+  regardless of profile.
+
+**Feedback capture (write side of Principle XII)**
+
+- **FR-020**: When the evaluator's critique (skeleton or lesson) surfaces a durable finding worth
+  carrying forward — not merely a delta the author already resolved within the round cap — the phase
+  MUST append it to the course's `FEEDBACK.md`. This is 003's write-side contribution to Principle
+  XII's compounding loop, alongside 001's gate-event writes (001 FR-026); harvesting `FEEDBACK.md`
+  into `insights/` remains 004's and is user-invoked only.
+
+**Calibration persistence**
+
+- **FR-021**: The fake-student calibration's output (confusion points + resulting drafting guidance)
+  MUST be persisted to the course's **`CALIBRATION.md`**, created once the check completes
+  (FR-013–FR-015). Every author subagent for a lesson beyond the first two MUST read `CALIBRATION.md`
+  as an input (FR-007) — a session dying post-calibration resumes from this file rather than losing
+  the guidance (honoring 001's disk-only resume rule, 001 FR-018).
 
 ### Key Entities
 
@@ -290,20 +357,22 @@ remaining lessons, and that the check runs **exactly once** for the course.
 - **Author subagent** — a fresh-context worker that drafts/refines one skeleton or lesson from a fixed
   input set; carries no cross-lesson context.
 - **Evaluator subagent** — an author-blind worker that critiques an artifact against its checks
-  (topic-match + clarity for skeletons; the rubric + citation traceability for lessons); never sees
-  the author's reasoning.
+  (topic-match + clarity for skeletons; the rubric + full citation-traceability check for lessons —
+  every citation, not a sample); never sees the author's reasoning.
 - **Author–critic pair** — one author + one evaluator running the shared author → critique → refine
   loop for a single artifact.
-- **Worker pool** — the fan-out / fan-in orchestration that keeps at most two author–critic pairs in
-  flight over the lesson set.
+- **Worker pool** — the fan-out / fan-in orchestration that keeps at most `pool_width` author–critic
+  pairs in flight over the lesson set (FR-009); a configurable parameter, MVP = 1, target = 2.
 - **Author → critique → refine primitive** — the shared, 3-round-capped loop used by both phases.
 - **Round cap** — the hard limit of 3 refine rounds; on reaching it, the best-effort artifact + delta
   is surfaced (for 001's decision).
 - **Rubric** — the lesson gate; defined and owned by 004, consumed here as pass/fail.
 - **`[Sn]` citation** — a claim's pointer into `SOURCES.md`; required on every sourced lesson claim
-  (mentor-added claims are explicitly marked instead) and spot-checked for traceability.
-- **Traceability spot-check** — the evaluator's verification that a citation resolves to a real
-  source (tracing, not truth).
+  (mentor-added claims are explicitly marked instead) and checked for traceability, every citation,
+  not a sample (FR-011).
+- **Traceability check** — the evaluator's verification that **every** citation in a lesson resolves
+  to a real source (tracing, not truth) — a full check, not a spot-check, because resolution is a
+  cheap mechanical lookup.
 - **Fake-student subagent** — the once-per-course learnability probe reading the first two lessons as
   the target audience.
 - **Confusion points / calibration** — the fake-student's findings, fixed in the first two lessons and
@@ -315,7 +384,16 @@ remaining lessons, and that the check runs **exactly once** for the course.
 - **`BUILD_PROGRESS.md` per-lesson status** — the phase's write into 001's state file as each lesson
   finishes.
 - **Forward diff** — the mechanism by which a gap found in an earlier gated artifact is surfaced at
-  the current phase without re-opening it (001 FR-023).
+  the current phase without re-opening it (001 FR-023), recorded in 001's `DIFFS.md` ledger (001
+  FR-027). Authors read the frozen artifact **plus** its `DIFFS.md` entries as one canonical input.
+- **Selected profile** — the course's chosen archetype profile (001's overlay decision, 000's
+  mechanism); shapes this phase's scaffolding depth and advisory-checkpoint placement (FR-019).
+- **`FEEDBACK.md`** — the per-course critique file; this phase **appends** durable evaluator findings
+  to it (FR-020) alongside 001's gate-event writes. Harvesting into `insights/` is 004's, user-invoked
+  only.
+- **`CALIBRATION.md`** — the fake-student calibration's persisted output (confusion points + drafting
+  guidance), created once the check completes (FR-021); read by every author of a lesson beyond the
+  first two.
 
 ## Success Criteria *(mandatory)*
 
@@ -326,8 +404,8 @@ remaining lessons, and that the check runs **exactly once** for the course.
   the time.
 - **SC-002**: **100%** of lessons are authored by a fresh-context author and graded by a separate
   author-blind evaluator — the evaluator receives the author's private reasoning **0** times.
-- **SC-003**: The worker pool holds **at most two** author–critic pairs in flight at any moment —
-  **0** runs exceed two concurrent pairs.
+- **SC-003**: The worker pool holds **at most `pool_width`** author–critic pairs in flight at any
+  moment (MVP: `pool_width` = 1; target: 2) — **0** runs exceed the configured `pool_width`.
 - **SC-004**: **100%** of factual claims in passed lessons are either `[Sn]`-cited or explicitly
   marked mentor-added judgment (**0** silently ungrounded claims), and **0** lessons pass the gate
   with an unresolvable citation (every traceability failure blocks the pass).
@@ -335,7 +413,9 @@ remaining lessons, and that the check runs **exactly once** for the course.
   to the lesson phase without a recorded user approval (consistent with 001 FR-024).
 - **SC-006**: The fake-student check runs **exactly once** per course (never 0 when ≥1 lesson reaches
   a terminal state, never more than 1), and its confusion points are folded into the drafting
-  guidance for **100%** of the remaining lessons.
+  guidance for **100%** of the remaining lessons. Both calibration-edited lessons are **re-graded**
+  against the rubric before the check is considered complete — **0** unregraded edits to an
+  already-passed lesson.
 - **SC-007**: **100%** of lessons reaching a terminal state have their per-lesson status written to
   `BUILD_PROGRESS.md` before the pool treats them as done — **0** lessons finalized without a status
   write.
@@ -369,9 +449,16 @@ remaining lessons, and that the check runs **exactly once** for the course.
   lesson may assume** when `SOURCES.md` is thin: lessons may rely on flagged, mentor-added grounding
   but MUST preserve the thin-grounding flags and mentor-added tags rather than presenting them as
   sourced. 003 follows that policy rather than defining its own.
-- **The round cap (3), the two-pairs-in-flight width, the fresh-context author / author-blind
-  evaluator split, and the once-per-course fake-student scope** are taken as fixed from the design and
-  the constitution; they are calibratable later but treated as hard constraints here.
+- **The round cap (3), the fresh-context author / author-blind evaluator split, and the once-per-course
+  fake-student scope** are taken as fixed from the design and the constitution; they are calibratable
+  later but treated as hard constraints here. (`pool_width` is the one exception, deliberately made
+  configurable — FR-009 — starting at MVP = 1.) **Of these, the fake-student scope is the first knob
+  to revisit** if early real runs show low calibration yield — the settled gate-then-fan-out ordering
+  (FR-018) governs it *given* it runs, not whether it ships in the first increment.
+- **`.ipynb` citation mechanics are plan-level detail.** When a lesson's format is `.ipynb` (002's
+  decision), `[Sn]` keys live in markdown cells (not code-cell comments or outputs) so the
+  traceability check can read them via the same text-scan method as `.md` lessons; the exact
+  cell-parsing approach is left to this spec's `/speckit-plan`.
 - **"First two lessons" means the first two to reach a terminal state** (rubric-passed or
   cap-surfaced-and-user-accepted), in syllabus order; the fake-student check keys off accepted
   content, not merely drafted content, and cannot deadlock on a lesson that never passes (see

@@ -1,9 +1,10 @@
 # course-factory specs — index & roadmap
 
-The factory is decomposed into **four subject-specs**, ordered by pipeline flow. Each is an
-independently specifiable / plannable / implementable unit (`spec.md` → `plan.md` → `tasks.md`), so
-the work can be split across sessions: a fresh session reads this index, picks one spec, and works
-it without re-deriving the decomposition.
+The factory is decomposed into a **foundational asset spec (000)** plus **four subject-specs
+(001–004)**, ordered by pipeline flow. Each is an independently specifiable / plannable /
+implementable unit (`spec.md` → `plan.md` → `tasks.md`), so the work can be split across sessions: a
+fresh session reads this index, picks one spec, and works it without re-deriving the decomposition.
+**000 is the prerequisite** — it produces the frozen template every downstream spec copies.
 
 Governing doc: [`course-factory/DESIGN.md`](../../course-factory/DESIGN.md) (source of truth) and
 the project constitution at [`.specify/memory/constitution.md`](../../.specify/memory/constitution.md).
@@ -12,11 +13,12 @@ the project constitution at [`.specify/memory/constitution.md`](../../.specify/m
 > - `BUILD_PROGRESS.md` resumes a **course build** (runtime, one per generated course).
 > - This index + `specs/**` resumes **our development of the factory** (build-time, across sessions).
 
-## The four specs
+## The specs
 
 | # | Spec | Owns | Depends on | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **001** | **Pipeline & Instantiation** | intake clarify interview, `COURSE_BRIEF.md` overlay + module selection, frozen-template copy/overlay/version contract, the phase state machine, gates, resume, delivery contract | course-template asset | **Clarified** (2 Qs resolved) — ready for `/speckit-plan` |
+| **000** | **Course-Template Distillation** | distill the frozen, versioned, **three-tiered** `course-template/` (**core + archetype profiles + optional modules**): gather ideas from `System_Design_SelfLearn/.claude/` (**unvalidated — critical-thinking filter, not authority**) **plus an external research digest**, classify every reference asset (keep-core/demote-module/drop), strip topic-specifics, two-layer rubric shape, version stamp | reference course (unvalidated, read-only) + external research digest | **Drafted** (research digest in; tiering = one core + profiles) — ready for `/speckit-clarify` |
+| **001** | **Pipeline & Instantiation** | intake clarify interview, `COURSE_BRIEF.md` overlay + module selection, frozen-template copy/overlay/version contract, the phase state machine, gates, resume, delivery contract | 000 (course-template asset) | **Clarified** (2 Qs resolved) — ready for `/speckit-plan` |
 | **002** | **Syllabus** | research & sourcing → `SOURCES.md`, compose-as-mentor, the `.md`/`.ipynb` lesson-format decision, the user-approval gate's content | 001 | **Clarified** (2 Qs resolved) — ready for `/speckit-plan` |
 | **003** | **Lessons** | skeleton & lesson authoring, the parallel author–critic worker pool, the fake-student learnability check | 001, 004 (rubric) | **Clarified** (3 Qs resolved) — ready for `/speckit-plan` |
 | **004** | **Grading & Delivery** | the rubric & course-evaluator internals, `COURSE_REPORT.md` scorecard, `FEEDBACK.md` → `insights/` harvest, `comparison/` | 001 | **Clarified** (3 Qs resolved) — ready for `/speckit-plan` |
@@ -26,27 +28,49 @@ Status legend: **Not started** → **Drafted** (spec.md written) → **Clarified
 
 ## What each spec covers
 
+### 000 — Course-Template Distillation → [`000-course-template/spec.md`](000-course-template/spec.md)
+
+The foundational asset (DESIGN roadmap task #1). Reverse-engineers the topic-neutral teaching
+machinery from the one-topic reference course `System_Design_SelfLearn/.claude/` — which is
+**unvalidated (never delivered to a real learner) and therefore NOT a reliable reference**: it is an
+**idea pool weighed with critical thinking**, cross-checked against an **external research digest**
+(a Perplexity-style `.md` dropped into the feature folder) so SD is **not the sole source**.
+Classifies every reference asset **keep-core / demote-module / drop** (never keeping anything just
+because SD had it), strips every System-Design / HomeOS-Cloud / `patterns_v1` specific, and sorts
+survivors into a **three-tier** template: a **small mandatory core** (evidence-invariant backbone +
+lesson arc + feedback loops + quality rubric + `/improve-course` + `/new-lesson`), a set of
+**archetype profiles** (PBL/CBL, CBE/mastery, guided-inquiry, + a default — configurations *over the
+one core*, **not** siloed per-subject templates), and **opt-in optional modules**; shapes the rubric
+as **one-rubric-two-layers** (generic core + requestable topic add-ons); freezes + version-stamps the
+result. The tiering model is settled by the research digest (`research-digest.md` §5). **001's copy
+contract (FR-001) depends on this existing.** **Open questions:** distillation validation depth,
+`lesson-consistency-reviewer` core-vs-module placement — resolve with `/speckit-clarify` before
+planning.
+
 ### 001 — Pipeline & Instantiation → [`001-pipeline-skeleton/spec.md`](001-pipeline-skeleton/spec.md)
 
-The front-end + the spine. Turns a rough `COURSE_SPEC.md` into a set-up, resumable course build and
-walks it through the fixed phase sequence to delivery. Treats each phase's *internal work* as a
-black box behind its gate. **Open questions:** backward-transition policy (FR-023), post-skeleton
-user-scan blocking behavior (FR-024) — resolve with `/speckit-clarify` before planning.
+The front-end + the spine. Turns a rough `COURSE_SPEC.md` into a set-up, resumable course build —
+including selecting the course's **archetype profile** (000's mechanism) — and walks it through the
+fixed phase sequence to delivery. Treats each phase's *internal work* as a black box behind its gate.
+**Its implementation is the factory's own build `.claude/`** (DESIGN roadmap task #2) — not a
+separate spec, see 001's Assumptions. **Open questions:** backward-transition policy (FR-023),
+post-skeleton user-scan blocking behavior (FR-024) — resolve with `/speckit-clarify` before planning.
 
 ### 002 — Syllabus
 
 The depth behind the **syllabus gate**: shallow research (web + `gh` + Udemy/Coursera/edX
 name-search) with a convergence + budget stopping rule, saved to `SOURCES.md` under `[Sn]` keys;
-compose-as-mentor (sources inform, never dictate); decide course volume and the `.md`/`.ipynb`
-format, writing the format back into `COURSE_BRIEF.md`. Ends at the user-approval gate; approved
-syllabus is frozen.
+compose-as-mentor (sources inform, never dictate), **consistent with the course's selected profile**;
+decide course volume and the `.md`/`.ipynb` format, writing the format back into `COURSE_BRIEF.md`.
+Ends at the user-approval gate; approved syllabus (`SYLLABUS.md`) is frozen.
 
 ### 003 — Lessons
 
 The depth behind the **skeleton and lesson gates**: the shared author → critique → refine primitive
 (3-round cap); the parallel author–critic worker pool (fresh-context authors + author-blind
-evaluators, two pairs in flight); the once-per-course fake-student learnability check on the first
-lessons. Consumes 004's rubric as the lesson gate.
+evaluators, two pairs in flight), authoring **per the selected profile's** scaffolding depth and
+checkpoint placement; the once-per-course fake-student learnability check on the first lessons.
+Consumes 004's rubric as the lesson gate.
 
 ### 004 — Grading & Delivery
 
@@ -55,23 +79,45 @@ add-ons) and course-evaluator, the graded `COURSE_REPORT.md`, the `FEEDBACK.md` 
 harvest so the factory compounds, and `comparison/` (analyze GitHub courses → propose rubric
 revisions). It owns the *only* definition of quality.
 
-## Foundational assets (prerequisites, not specs)
+## Foundational assets
 
-- **`course-template/` distillation** (DESIGN roadmap task #1) — extract the topic-neutral core
-  (syllabus, lesson arc, rubric, `/improve-course`, `/new-lesson`) from `System_Design_SelfLearn`
-  into the frozen, tiered template; demote SD-specific pieces to optional modules. **001's copy
-  contract depends on this existing.**
+- **`course-template/` distillation** (DESIGN roadmap task #1) — **now spec 000** (above), no longer
+  a spec-less prerequisite: extract the topic-neutral core (syllabus, lesson arc, rubric,
+  `/improve-course`, `/new-lesson`) into the frozen, tiered template; demote SD-specific pieces to
+  optional modules. **`System_Design_SelfLearn` is an unvalidated idea-source, not a proven
+  reference** — filter it with critical thinking and cross-check it against an external research
+  digest (see 000); never inherit from it by authority. **001's copy contract depends on this
+  existing.**
 - **`COURSE_SPEC.template.md`** — the author-facing spec template (initial draft exists in
-  `../templates/`).
+  `../templates/`); still a plain asset, not a spec.
 
 ## Seams to watch (cross-spec)
 
 1. **The rubric is shared** — it is the *gate* in 003 but the *engine* in 004. Define it in 004;
    003 consumes it. 004's rubric core likely needs to land (or a thin shared contract) before 003.
 2. **`COURSE_BRIEF.md`** — created by 001, augmented by 002 (the format decision), read by 002/003/004.
-3. **`BUILD_PROGRESS.md` / phase state** — owned by 001; 002 and 003 update per-lesson/phase status
-   as they run behind their gates.
+3. **`BUILD_PROGRESS.md` / phase state** — owned by 001 (FR-015). **002** records the syllabus
+   phase's **sub-phase status** (`research-in-progress` / `research-done` / `composed` / `presented`,
+   002 FR-018) as it completes each sub-step; **003** updates per-lesson status as lessons complete
+   (003 FR-012).
 4. **`course-template/`** — the foundational asset above; a hard prerequisite for 001.
+5. **Archetype profile** — selected at intake (001 FR-005), defined by 000 (FR-022–025), consumed by
+   002 (syllabus spine/checkpoints, FR-015) and 003 (scaffolding depth/checkpoint placement, FR-019).
+6. **Forward-diff ledger (`DIFFS.md`)** — owned by 001 (FR-027). "Frozen artifact + its `DIFFS.md`
+   entries" is the canonical read for 002 (FR-017), 003 (FR-007), and any other downstream consumer of
+   a gated artifact — never the frozen artifact alone once a diff exists against it.
+7. **Version identity** — the rubric's version **is** the template's version stamp (000 FR-016 / 004
+   FR-005); one identity, not two. A rubric revision from `comparison/` lands via 000's narrower
+   rubric-only re-stamping path (000 Edge Cases), not a full re-distillation.
+8. **Ask-moments vs. gates** — 001 FR-014's two-ask-moment limit governs open clarifying questions
+   only. Review gates (syllabus approval loop, the blocking skeleton scan, the round-cap
+   accept-or-comment decision) are a separate, unlimited-count category — they are scheduled decision
+   points on already-produced work, not open questions.
+9. **`FEEDBACK.md` write side** — populated during the build by 001 (gate-event comments, FR-026) and
+   003 (evaluator critiques, FR-020); harvested up into `insights/` by 004, user-invoked only
+   (unchanged). Previously unowned (see former finding A4).
+10. **Insights digest read side** — read at intake (001 FR-025), syllabus compose (002 FR-016), and
+    drafting (003, pre-existing FR-007); an empty digest is valid input everywhere.
 
 ## Resolved decisions (seam log)
 
@@ -132,8 +178,23 @@ sibling specs it constrains).
   user invokes them, keeping 004 decoupled from 001's phase transitions. → *Loosens the 001 seam*: the
   harvest is **not** wired into delivery or phase advancement.
 
+## Deferred extensions
+
+Ideas that touch these specs but are intentionally **not** in their initial scope — each has an
+Out-of-Scope bullet in the owning spec(s); the few-words version and full rationale live in
+`course-factory/DESIGN.md` § Deferred extensions and `docs/FUTURE_IDEAS.md` § Course-factory.
+
+| Idea | Touches | Depends on |
+| :--- | :--- | :--- |
+| Multi-format / per-artifact lessons (HTML, slides) | 002 (format decision) | A `course-template/` renderer module |
+| Inline mid-lesson MCQ comprehension checks | 003 (authoring), 004 (rubric) | A `course-template/` opt-in module |
+| Pedagogy technique library (`pedagogy/`) | 002 (compose), 003 (drafting), 004 (rubric add-on) | 002's research method, generalized |
+| Spec-kit-style artifact discipline for course *builds* (status-stamped artifacts, per-phase checklists, an analyze-style check, a decision/seam log) | 001, 002, 003, 004 | None — pick up during each spec's own `/speckit-plan` |
+
 ## Recommended build order
 
-`course-template/` asset → **001** → **002** → **004 (rubric core)** → **003** → **004 (delivery,
-feedback harvest, comparison)**. Rationale: the spine and instantiation first; then the first gate's
-depth (syllabus); the rubric must exist before lessons can be graded; delivery/feedback last.
+**000 (`course-template/` asset)** → **001** → **002** → **004 (rubric core)** → **003** → **004
+(delivery, feedback harvest, comparison)**. Rationale: the frozen template must exist before anything
+can copy it (000); then the spine and instantiation (001); then the first gate's depth (syllabus,
+002); the rubric must exist before lessons can be graded (004 core); lessons (003); delivery/feedback
+last.

@@ -34,6 +34,12 @@ post-research divergence question.
   rubric-graded.
 - **Heavy platform tooling** — no scrapers, pullers, logins, or paid APIs for course platforms;
   research stays light (web search + `gh` CLI + shallow public name-search).
+- **Per-artifact / multi-format lesson rendering (HTML, slides)** — a deferred extension to the
+  `.md`/`.ipynb` format decision above; depends on a future `course-template/` renderer module.
+- **A per-phase quality checklist as a gate artifact** for the syllabus gate, mirroring spec-kit's
+  `checklists/requirements.md` — a deferred, non-mandatory addition.
+
+  Both tracked in `course-factory/DESIGN.md` § Deferred extensions, not this spec's initial scope.
 
 ## Clarifications
 
@@ -141,8 +147,15 @@ divergence question is asked.
   web + GitHub grounding and records the platform limitation, rather than scraping or paying.
 - **Search/tool-call budget reached before convergence** — research stops at the budget and the
   syllabus notes that grounding was capped, not converged.
-- **A citation `[Sn]` becomes unresolvable** (dead link, removed post) — flagged so later lessons do
-  not cite a broken key.
+- **A citation `[Sn]` becomes unresolvable** (dead link, removed post) — if discovered during this
+  phase's own research/composition, the entry is flagged in `SOURCES.md` immediately; 002 does not
+  run ongoing liveness re-checks after that (avoids repeated fetch cost, per the light-tooling
+  assumption). A link that dies later is caught downstream by 004's traceability check (004
+  FR-007) at grading time — entries outlive links, and a dead link is never silently invisible.
+- **The topic cannot support the brief's requested depth (or vastly exceeds it)** — the phase
+  corrects the volume decision (FR-008) toward what the topic can actually sustain, using mentor
+  judgment (FR-006), and flags the deviation from the brief's stated depth rather than silently
+  padding or truncating content.
 - **User keeps requesting syllabus changes without converging** — handled by 001's approval-loop
   control; 002 keeps revising the content each cycle.
 
@@ -154,7 +167,11 @@ divergence question is asked.
 
 - **FR-001**: The syllabus phase MUST research the topic across the web, GitHub (via the `gh` CLI),
   and course platforms (Udemy/Coursera/edX) using a **shallow name-search of publicly-visible
-  syllabi** — no logins, scrapers, or pullers.
+  syllabi** — no logins, scrapers, or pullers. **Course-platform search runs last** in the research
+  sequence (after web + GitHub) and is **explicitly degradable**: if platform syllabi are inaccessible
+  without login, the phase completes on web + GitHub grounding alone (see Edge Cases), never blocking
+  on platform access — platform search is the most fragile, lowest-yield leg and is sequenced
+  accordingly.
 - **FR-002**: The phase MUST critically weigh each candidate source for **reliability**, treating
   popularity/stars as a green-flag signal, not proof of correctness; only kept sources are recorded.
 - **FR-003**: Kept sources MUST be recorded in `SOURCES.md` under **stable `[Sn]` keys** — links for
@@ -173,7 +190,9 @@ divergence question is asked.
   dictate; the phase MUST fill gaps and correct stale or industry-irrelevant sources with
   current-industry judgment.
 - **FR-007**: Every syllabus topic MUST either trace to a `[Sn]` source **or** be explicitly marked
-  as mentor-added judgment; there MUST be no silently ungrounded topics.
+  as mentor-added judgment; there MUST be no silently ungrounded topics. This is the syllabus-level
+  application of the factory's **canonical citation/grounding contract** (004 FR-007/FR-008); 002
+  applies it at topic granularity rather than re-deriving an independent rule.
 - **FR-008**: The phase MUST decide the course **volume** (approximate phase / lesson count),
   grounded in the brief's stated depth and size.
 - **FR-009**: The phase MUST decide the **lesson file format** — `.md` by default, `.ipynb` when the
@@ -197,6 +216,38 @@ divergence question is asked.
   002 MUST NOT re-implement or contradict them, and MUST keep the syllabus in a form that supports
   001's diff-based change presentation after freezing.
 
+**Profile consumption (000's archetype profiles)**
+
+- **FR-015**: The syllabus MUST be composed **consistent with the course's selected archetype
+  profile** (001's overlay decision, per 000 FR-022/023) — honoring that profile's macro organizing
+  spine, entry point (theory-first vs problem-first), and checkpoint placement/frequency (advisory
+  only, per 000 FR-022) — while still reusing the mandatory core's invariants (000 FR-024); the phase
+  MUST NOT redefine or bypass those invariants when applying a profile.
+
+**Cross-phase reads (constitution Principle XII, 001's diff ledger)**
+
+- **FR-016**: Composition MUST read the `insights/` digest (004's harvested output) as an input,
+  alongside `SOURCES.md`; an **empty or missing digest is a valid input**, not a blocker (mirrors
+  003's precedent). This is the syllabus-side implementation of Principle XII's read rule.
+- **FR-017**: Where composition works against an already-gated earlier artifact that carries applied
+  forward diffs (001 FR-027), the phase MUST read the **frozen artifact plus its `DIFFS.md` entries**
+  together as the canonical input, never the frozen artifact alone.
+
+**Sub-phase resumability**
+
+- **FR-018**: The syllabus phase MUST record its **sub-phase status** — one of `research-in-progress`,
+  `research-done`, `composed`, or `presented` — in `BUILD_PROGRESS.md` (001 FR-015) as it completes
+  each sub-step, so a session dying mid-phase resumes at the correct sub-step (e.g., skipping
+  already-completed research) rather than restarting the whole phase.
+
+**Post-divergence re-research**
+
+- **FR-019**: After the user answers a divergence question (FR-012), the phase MAY resume research to
+  fill gaps the answer reveals, chargeable against the **same** search/tool-call budget (FR-005) — it
+  MUST NOT open a fresh budget. If the remaining budget is insufficient, the phase composes from the
+  directional answer plus existing sources per the thin-grounding policy (FR-011) rather than
+  exceeding the cap.
+
 ### Key Entities
 
 - **COURSE_BRIEF.md** — the overlay (from 001) that the phase *reads* (audience, scope, running
@@ -210,10 +261,18 @@ divergence question is asked.
 - **Search/tool-call budget** — the hard backstop (a max query / tool-call count) that stops
   research even without convergence.
 - **Syllabus** — the composed course shape and scope (phases, lessons, arc); the phase's headline
-  artifact, ultimately user-approved.
+  artifact, ultimately user-approved. Its on-disk identity is **`SYLLABUS.md`**, at the course
+  folder's root; a required delivery artifact (001 FR-020).
 - **Lesson-format decision** — `.md` vs `.ipynb`, decided here and written back to `COURSE_BRIEF.md`.
 - **Divergence** — wide disagreement across sources on the course's angle; the trigger for the
   second ask-moment.
+- **Selected profile** — the course's chosen archetype profile (001's overlay decision, 000's
+  mechanism); shapes this phase's macro spine, entry point, and checkpoint placement (FR-015).
+- **Insights digest** — the cross-course knowledge store (004's harvest output); read as a composition
+  input (FR-016). May be empty.
+- **Syllabus sub-phase status** — the phase's checkpoint state (`research-in-progress` /
+  `research-done` / `composed` / `presented`) recorded in `BUILD_PROGRESS.md` (FR-018) so a mid-phase
+  interruption resumes at the right sub-step.
 
 ## Success Criteria *(mandatory)*
 
@@ -227,7 +286,10 @@ divergence question is asked.
 - **SC-004**: The lesson-format decision (`.md`/`.ipynb`) is recorded in `COURSE_BRIEF.md` in
   **100%** of completed syllabi.
 - **SC-005**: The divergence ask-moment fires **only** when sources diverge — **0** divergence
-  questions on agreeing-source runs, and it is raised whenever a real angle conflict exists.
+  questions on agreeing-source runs — and **every run records an explicit divergence assessment**
+  (converged / diverged, naming the sources compared) in the syllabus's composition notes, making the
+  fire/no-fire decision auditable after the fact even though the underlying divergence judgment is
+  agent-rendered (see Assumptions).
 - **SC-006**: When platform syllabi are inaccessible, the phase completes on web + GitHub grounding
   and records the limitation **100%** of the time — **0** uses of scrapers, logins, or paid pullers.
 - **SC-007**: A composed syllabus stays consistent with the brief's audience, scope, and running
@@ -252,3 +314,7 @@ divergence question is asked.
   it does not own when the loop ends or how the freeze is enforced.
 - **`[Sn]` keys are append-stable** — once assigned, a key is not reused for a different source, so
   later lesson citations remain valid.
+- **Research reuses the `mentor-research` skill** (`skills/mentor-research/`, extracted from the
+  `pedagogy/` build expressly for this spec's own future research runs) as the shared discipline —
+  research → weigh reliability → cite under stable keys → converge-or-budget — rather than inventing
+  a second method; FR-001–FR-005 are this discipline applied to per-course syllabus research.

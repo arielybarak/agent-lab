@@ -93,10 +93,16 @@ scan** after skeletons, **rubric-only** after lessons.
 
 0. **Intake / clarify** — read the spec, then ask the user upfront questions to resolve
    ambiguities about the course's *nature* **before** spending the expensive research. Cheaper to
-   settle now than mid-pipeline. Produces a clarified spec + `COURSE_BRIEF.md` + module selection.
+   settle now than mid-pipeline. Produces `COURSE_BRIEF.md` — the single on-disk home for the
+   clarified spec's output, the selected archetype profile, and the module selection; no separate
+   clarified-spec file.
 1. **Copy** `course-template/` into the new course (skeleton + frozen `.claude`), apply overlay,
-   stamp the template version, and create an empty `BUILD_PROGRESS.md` (pipeline state: current
-   phase + per-lesson status, so any session can resume mid-course).
+   stamp the template version, and initialize `BUILD_PROGRESS.md` (pipeline state: current
+   phase + per-lesson status, so any session can resume mid-course), plus the `SOURCES.md`,
+   `FEEDBACK.md`, and `DIFFS.md` stubs. *(Deferred idea: since this is
+   a long, multi-session pipeline, `BUILD_PROGRESS.md` could borrow more of spec-kit's own artifact
+   discipline — status-stamping each phase's artifact, a short per-course decision/seam log —
+   wherever it helps, not confined to this one file.)*
 2. **Syllabus loop:**
    - **a. Research (expensive).** Search the web, **GitHub**, and **course platforms**
      (Udemy, Coursera, edX) for existing courses / accessible syllabi / other sources on the topic.
@@ -115,6 +121,8 @@ scan** after skeletons, **rubric-only** after lessons.
      gaps, correct staleness, and keep it relevant. Decide course **volume** here, plus the
      **lesson file format** — `.md` by default, `.ipynb` when the course is code-heavy (a judgment
      call from the course's nature once the syllabus takes shape; record it in `COURSE_BRIEF.md`).
+     *(Deferred idea: this could later go per-artifact — e.g. HTML/slide-deck lessons alongside
+     `.ipynb` exercises — once `course-template/` carries a renderer module for it.)*
    - **c. Diverging sources?** If topics vary widely across sources, ask the user directional
      questions to pick the course's angle. *(This gate can't be front-loaded — you only learn of
      the divergence by looking.)*
@@ -130,6 +138,9 @@ scan** after skeletons, **rubric-only** after lessons.
      Author ↔ critique ↔ refine until all pass, **capped at 3 rounds**; what's still unresolved
      goes to the user with the open delta.
    - **c. User reviews** the batch (scans as deeply as he likes); repeat if he wants changes.
+   - *(Deferred idea: a per-phase quality checklist as a gate artifact — mirroring spec-kit's
+     `checklists/requirements.md` — could formalize step b's agent review, here and in the lesson
+     loop below.)*
 4. **Lesson loop** — the **same author ↔ critique ↔ refine** inner loop as skeletons, on **full
    lessons**, graded against the **rubric** (same 3-round cap). Correctness is the **automated**
    gate; the user may add *learnability* feedback ("too fast," "confusing example") — but
@@ -137,24 +148,40 @@ scan** after skeletons, **rubric-only** after lessons.
    - **Execution: parallel author–critic pairs.** Each lesson gets its own **fresh-context author
      subagent** (inputs: brief + syllabus + its skeleton + relevant `SOURCES.md` entries + the
      insights digest) and a **separate author-blind evaluator subagent** (never sees the author's
-     reasoning). The orchestrating session mediates each pair's loop and keeps **two pairs in
-     flight** at a time (a fan-out/fan-in worker pool), updating `BUILD_PROGRESS.md` after every
-     lesson.
+     reasoning). The orchestrating session mediates each pair's loop and keeps at most **`pool_width`
+     pairs in flight** at a time (a fan-out/fan-in worker pool; `pool_width` is a configurable
+     parameter — **MVP ships serial-first, `pool_width` = 1**; the design **target is 2** once real
+     runs validate the concurrency model — see `specs/course-factory/003-lessons`), updating
+     `BUILD_PROGRESS.md` after every lesson.
    - **Citations are mandatory.** Claims carry `[Sn]` keys resolving to `SOURCES.md`; the
      evaluator spot-checks **traceability** (claim maps to a real source). It verifies tracing,
      not truth.
-   - **Fake-student check — once per course, lightweight.** When the **first two lessons** pass
-     the rubric, a fresh subagent gets *only* the brief's audience + assumed prior knowledge and
-     those two lessons; it reads them and attempts the exercise. Its confusion points (undefined
-     terms, too-fast steps) are fixed there **and folded into the drafting guidance for every
-     remaining lesson**. One run — it calibrates the explanation format, not each lesson.
+   - **Pool ordering — gate then fan out.** The pool authors the **first two lessons** before any
+     others begin, runs the fake-student calibration below, and only then fans out the remaining
+     lessons two at a time with the calibration folded in — no lesson beyond the first two starts
+     before calibration completes (settled 2026-07-07, see specs/course-factory/003-lessons).
+   - **Fake-student check — once per course, lightweight.** When the **first two lessons reach a
+     terminal state** (rubric-passed **or** cap-surfaced-and-user-accepted — settled 2026-07-07,
+     not simply "pass the rubric"), a fresh subagent gets *only* the brief's audience + assumed
+     prior knowledge and those two lessons; it reads them and attempts the exercise. Its confusion
+     points (undefined terms, too-fast steps) are fixed there **and folded into the drafting
+     guidance for every remaining lesson**. One run — it calibrates the explanation format, not
+     each lesson.
    - **Stuck lessons don't loop forever.** After the capped rounds, show the user the current best
      version + its scorecard; they accept it or give comments for one more pass.
+   - *(Deferred idea: status-stamping each lesson's artifact version as it clears the gate, so a
+     resumed build's history is legible at a glance.)*
 5. **Deliver** — the course content + its specialized `.claude` residue + a **`COURSE_REPORT.md`**:
    the final graded scorecard the `course-evaluator` emits (rubric scores, wins, cleanups, verdict),
    like `System_Design_SelfLearn`'s `updated_course_report.md`. Generated by the `/course-report`
-   command inherited from the template. It **certifies** the course to the user — distinct from
-   `FEEDBACK.md`, which feeds improvement back into the factory's `insights/`.
+   command inherited from the template. It **reports the graded quality** to the user — a "needs
+   work" verdict is still delivered as-is, never withheld or blocked; the delivery gate is the
+   report's *generation*, not a passing verdict (settled: specs/course-factory/001 FR-011/FR-021,
+   004 FR-009). Distinct from `FEEDBACK.md`, which feeds improvement back into the factory's
+   `insights/`. *(Deferred idea: an
+   analyze-style cross-artifact consistency check — brief ↔ syllabus ↔ skeletons ↔ lessons — could
+   run here as a sibling to the course-evaluator's course-level verdict, catching drift the
+   per-phase gates miss.)*
 
 **Two moments we ask the user:** *upfront intake* (knowable ambiguities, before research) and
 *post-research* (only if sources diverge). Front-load what's knowable; defer what research reveals.
@@ -168,10 +195,11 @@ scan** after skeletons, **rubric-only** after lessons.
 | Path | Purpose |
 | :--- | :--- |
 | `.claude/` | The **factory's own** environment — pipeline commands + build agents (scaffold, draft, grade). Runs when *we* build a course. |
-| `course-template/` | The **frozen** output-course skeleton: folder layout for phases/lessons **+ its generic `.claude/`**. Copied, never mutated. **Tiered:** mandatory core (syllabus, lesson arc, rubric, `/improve-course`, `/new-lesson`) + optional modules (katas, diagrams, Socratic, pattern-catalog). |
+| `course-template/` | The **frozen** output-course skeleton: folder layout for phases/lessons **+ its generic `.claude/`**. Copied, never mutated. **Tiered:** mandatory core (syllabus, lesson arc, rubric, `/improve-course`, `/new-lesson`, `/course-report`) + optional modules (katas, diagrams, Socratic, pattern-catalog, *deferred:* per-artifact HTML/slide renderer, inline MCQ checkpoints). |
 | `courses/` | **Staging area where generated courses land** — one subfolder per course (`courses/<name>/`), each holding the content + `COURSE_BRIEF.md` + `SOURCES.md` + `BUILD_PROGRESS.md` (pipeline state) + a **`FEEDBACK.md`** (empty template; gathers critiques / things-to-fix for *that* course) + a **`COURSE_REPORT.md`** (the final graded scorecard from `course-evaluator`) + its `.claude` residue. After delivery the user moves the course out to its own home. |
 | `templates/` | The **course-spec template** (`COURSE_SPEC.template.md`, what the user fills in — initial draft exists) + syllabus/lesson templates. |
-| `insights/` | Distilled **lessons learned** across courses — anti-fabrication, the running-example backbone, kata design, estimation method. **Write rule** (two ways): *user-triggered capture* (when an insight surfaces, the user explicitly tells an agent to log it here) + a *`setup-retro`-style harvest* that **pumps each course's `FEEDBACK.md` up into here** after each course/phase. **Read rule:** intake (step 0), syllabus compose (2b), and skeleton/lesson drafting all load this digest. Knowledge, not tooling. |
+| `insights/` | Distilled **lessons learned** across courses — anti-fabrication, the running-example backbone, kata design, estimation method. **Starts empty** — no pre-existing corpus is seeded from the reference course; it only accumulates from this factory's own courses going forward. **Write rule** (two ways, both **user-invoked only** — settled 2026-07-08, no automatic/scheduled trigger): *user-triggered capture* (when an insight surfaces, the user explicitly tells an agent to log it here) + a *`setup-retro`-style bulk harvest* that pumps a course's `FEEDBACK.md` up into here on demand. **Read rule:** intake (step 0), syllabus compose (2b), and skeleton/lesson drafting all load this digest; an empty digest is valid input. Knowledge, not tooling. |
+| `pedagogy/` | **Built and populated (2026-07-10), not yet wired into any pipeline** — a teaching-technique library (`[Pn]`-keyed catalog + myths deny-list, methods + worked examples keyed by material/course type), sibling to `insights/`. Wiring into 002/003/004 happens when those specs are implemented. See [`pedagogy/README.md`](pedagogy/README.md) for the full description. |
 | `comparison/` | Analyze well-made GitHub courses vs ours. Produces **(a)** proposed revisions to the **one** template rubric (it never keeps a rival rubric) and **(b)** a **per-course report** feeding the `/improve-course` backlog. |
 
 ## The spec (the input that decides everything)
@@ -225,21 +253,46 @@ individual course.
   can pick up mid-course.
 - **Feedback compounds** — every course carries a `FEEDBACK.md`; harvest it up into `insights/`
   so the factory gets better with each course it builds.
+- **Reuse research discipline across scopes** *(deferred idea)* — the same weigh-for-reliability,
+  cite-with-`[Sn]`, converge-or-budget-cap method that grounds a single course's syllabus is the
+  right tool for building the cross-course `pedagogy/` technique library too — don't invent a
+  second research mechanism.
 - **Quality loop is mandatory** — no one-shot course generation.
 - **Anti-fabrication first** — ground every claim in the spec's source material; no invented
   numbers.
 - **One running example per course** — a concrete backbone the whole course threads through.
-- **Tiered templates** — small mandatory core, opt-in modules; don't force system-design shape
-  onto a math or history course.
+- **Tiered templates** — **one core + archetype profiles + opt-in modules** (three tiers): a small
+  evidence-invariant mandatory core, named profiles that reconfigure it for structurally-different
+  course types (theory, procedural/code, PBL/CBL, CBE/mastery, guided-inquiry), and opt-in modules.
+  **One core with profiles, not siloed per-subject templates** (grounded in
+  `specs/course-factory/000-course-template/research-digest.md` §5). Don't force the system-design
+  shape onto a math or history course.
+
+## Deferred extensions (tracked, not yet built)
+
+Ideas that touch this design but are intentionally **not** in the current build — each maps to a
+spec's Out-of-Scope section or a design-doc-only folder, so a cold reader can find where it lands.
+Full rationale for each: `docs/FUTURE_IDEAS.md` § Course-factory.
+
+| Idea | Touches | Depends on |
+| :--- | :--- | :--- |
+| Multi-format / per-artifact lessons (HTML, slides) | Syllabus format decision (spec 002) | A `course-template/` renderer module |
+| Inline mid-lesson MCQ comprehension checks | Lesson authoring (spec 003), rubric (spec 004) | A `course-template/` opt-in module |
+| Pedagogy technique library | Syllabus compose (002), drafting (003), rubric add-on (004) | [`pedagogy/README.md`](pedagogy/README.md); 002's research method, generalized |
+| Spec-kit-style artifact discipline for course *builds* — status-stamped phase artifacts, per-phase checklists, an analyze-style cross-artifact check, a decision/seam log | 001 (state schema), 002 (syllabus gate), 003 (skeleton/lesson gates), 004 (course-level check) | None — pick up during each spec's own `/speckit-plan`, before `plan.md` exists |
 
 ## Build roadmap
 
 1. **Distill `course-template/`** from `System_Design_SelfLearn/.claude` — extract the
    topic-neutral core (syllabus, lesson arc, rubric, `/improve-course`) into the frozen template;
    demote SD-specific pieces (`design-pattern-catalog`, `architecture-diagrams`, katas) to
-   **optional modules**. *This is task #1 — the template does not exist yet.*
+   **optional modules**. *This is task #1 — the template does not exist yet.* **SD is an
+   unvalidated idea-source, not a proven reference (see below): filter it with critical thinking and
+   pair it with external research; never inherit by authority.** Speced as `specs/course-factory/000-course-template`.
 2. **Stand up the factory's own `.claude/`** — the pipeline commands + build agents that run the
-   phased loop.
+   phased loop. **Owned by spec 001** as its `/speckit-plan` + `/speckit-tasks` implementation
+   deliverable (see `specs/course-factory/001-pipeline-skeleton/spec.md` Assumptions) — not a
+   separate spec.
 3. **Finish the course-spec template** (`templates/COURSE_SPEC.template.md` — initial draft exists).
 4. **Build `comparison/`** — define the benchmark rubric, then run the first analysis against a
    real GitHub course.
@@ -257,11 +310,22 @@ Its `.claude` lives at the **repo root**, not inside `System_Design_v1/`, and al
 agents, commands, and skills (course-evaluator, curriculum-architect, socratic-mentor,
 `/improve-course`, `/new-sd-lesson`, quality rubric) that we will harvest and generalize.
 
+> **⚠️ Reliability warning — treat as ideas, not proof.** This course was **never delivered to or
+> validated by a real learner/customer**, so it is **not a proof-of-concept and not a reliable
+> reference**. Its structure is unproven and may contain mistakes. Use it **only as a source of
+> ideas, weighed with critical thinking** (Principle III — weigh reliability, not existence), and
+> **never as the sole source**: the distillation (spec 000) cross-checks it against an **external
+> research digest** and never inherits an element just because SD happened to have it. The same
+> caution would apply to any insights someday traced back to SD-derived ideas — but `insights/`
+> **starts empty**: it is seeded from nothing, and grows only via 004's user-invoked harvest of
+> *this factory's own* generated courses (settled 2026-07-08), never a direct pull from SD.
+
 ---
 
 ## Open decisions
 
 *All settled for now.* Design decisions made during this pass are captured above — after real
-runs, calibrate: **research depth** (convergence + budget cap), **parallel width** (2
-author–critic pairs), the **refine cap** (3 rounds), and the **fake-student scope** (first 2
-lessons only).
+runs, calibrate: **research depth** (convergence + budget cap), **parallel width** (`pool_width`,
+ships serial-first at 1, target 2 author–critic pairs), the **refine cap** (3 rounds), and the
+**fake-student scope** (first 2 lessons only — the first knob likely to move if early runs show low
+calibration yield).

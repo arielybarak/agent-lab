@@ -127,6 +127,12 @@ Either answer is worth writing up, and it sharpens the rubric.
 
 ## Course-factory
 
+_Integrated into `course-factory/DESIGN.md` (§ Deferred extensions), the relevant specs'
+Out-of-Scope sections (`specs/course-factory/00{1,2,3,4}/spec.md`), and
+`course-factory/pedagogy/README.md`, as of 2026-07-10. Kept listed here per this file's own
+convention below — an idea stays until real implementation starts, not just once a design doc
+mentions it._
+
 Product ideas for the course generator (`course-factory/`). Each ties to a spec or an optional
 template module — noted inline so they're actionable when picked up. None are in the four current
 specs; they're deliberate later extensions.
