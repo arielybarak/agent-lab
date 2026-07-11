@@ -2,126 +2,50 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What this repo is
+## Repo map
 
-`agent-lab` is a **collection hub**, not an application. It gathers AI-agent tooling
-(skills, plugins, project templates, workshops) to study and remix, with the long-term goal
-of assembling one "perfect" agent setup for new projects. Three kinds of content live here:
+Collection hub, not one app. Method is spec-first (see SDD below). Parts, each with its own README:
 
-- **`references/`** — external repos pulled in as **git submodules** (other people's work:
-  `caveman`, `mattpocock-skills`, `ideal-project-scaffolder`, `sdd-workshop`). Treat these as
-  read-only upstreams — do **not** edit files inside them; changes belong upstream. See
-  `references/README.md` for what each one is and what's worth borrowing.
-- **`initial-sendbox/`** — a first-party project: a GitHub Copilot Agent Mode setup
-  (custom agents, skills, hooks, instructions) plus a small Python package used to exercise it.
-- **`meta-env-setup/`** — first-party **Claude Code** tooling gathered into one self-contained,
-  shareable kit: a scaffolder + validator/auditor, the method skills, ready-to-install `.claude`
-  setups for *other* repos, and an effectiveness-eval harness. See "First-party Claude Code
-  tooling" below.
+- `meta-env-setup/` — the live project. Kit for building/grading/evaluating **Claude Code** `.claude/` setups.
+- `course-factory/` — topic-agnostic course generator. **In design, not wired up** — pipeline doesn't run yet; source of truth is `course-factory/DESIGN.md`.
+- `specs/` + `.specify/` + root `.claude/skills/speckit-*` — the shared spec-kit (SDD) environment driving the above.
+- `agent-eval-kit/`, `docs/roadmap/` — design docs only, **not built**.
+- `references/` — 8 pinned git submodules (other people's work). Read-only: do not edit; changes go upstream. See `references/README.md`. After clone: `git submodule update --init --recursive`; bump one: `git submodule update --remote references/<name>`.
+- `initial-sendbox/` — **archived** GitHub Copilot experiment. Past, not used; don't take commands or conventions from it.
+- `docs/temp.md` — unrelated scratch notes, ignore.
 
-Because the references are submodules, after cloning run
-`git submodule update --init --recursive` (or clone with `--recurse-submodules`). Update one
-upstream with `git submodule update --remote references/<name>`.
+## Spec-Driven Development
 
-## Where the working code is: `initial-sendbox/`
+The repo root **is** the spec-kit environment (git root = `agent-lab`). Products (e.g. `course-factory/`) are subdirs kept product-only (DESIGN.md, code, templates); their specs + governance live in the root machinery:
 
-The agent system is config-as-files, designed for GitHub Copilot (CCA / Agent Mode), not a
-runtime you launch:
+- `.specify/` — engine: `scripts/bash/{create-new-feature,setup-plan,setup-tasks,common,check-prerequisites}.sh`, `templates/`, `memory/`.
+- Root `.claude/skills/speckit-*` — workflow skills. A feature moves spec → clarify → plan → tasks → analyze, each in its own file. Invoke as slash commands (`/speckit-specify`, etc.).
+- Specs namespaced `specs/<project>/<NNN>-<feature>/` → `spec.md`, `plan.md`, `tasks.md`, `checklists/`. Read `specs/<project>/README.md` first — it's the index; pick one spec and work it without re-deriving the decomposition.
 
-- **`.github/agents/<role>/*.agent.md`** — agent personas grouped by role: `research/`,
-  `planning/`, `coding/`, `mentoring/`. Each is a Markdown file with required YAML front-matter
-  (`name`, `description`). The intended workflow chains them:
-  `task-researcher → plan → tdd-red → implementer → (debug) → (janitor)`; mentoring agents never
-  edit code. For quick work, use `software-engineer-agent-v1` directly.
-- **`.github/instructions/*.instructions.md`** — coding standards auto-applied by file glob
-  (e.g. `*.py` → PEP 8 + PyTorch conventions; `*.cpp/*.h` → Google C++ / IntelliSense rules).
-  Most are kept close to verbatim from [github/awesome-copilot](https://github.com/github/awesome-copilot)
-  for easy updates — preserve that when touching them.
-- **`skills/`** — reusable instruction snippets, loaded on demand. Single-file skills are `.md`;
-  richer ones are a folder containing `SKILL.md`.
-- **`hooks/`** — lifecycle automation: `session-logger/`, `session-auto-commit/`, and
-  `governance-audit/` (audits `.agent.md` files against governance rules).
-- **`test-project/`** — `fall-detection-mini`, a tiny PyTorch audio-classifier package. Its sole
-  purpose is to give the agent pipeline a real, end-to-end target to operate on.
-- **`AGENTS.md`** / **`CONTEXT.md`** — read both before agent work in this folder; `CONTEXT.md`
-  states the learning intent, `AGENTS.md` is what Copilot's Coding Agent reads on an assigned issue.
+Footguns (cause errors if unknown):
 
-## First-party Claude Code tooling — `meta-env-setup/`
+- Constitution real path is `.specify/memory/<project>/constitution.md`. `.specify/memory/constitution.md` is a relative symlink to the active project's copy = the active-project selector. Edit the real path, **not the symlink** — `/speckit-constitution` (or any Write to the symlink path) can replace the symlink with a regular file. Recreate: `ln -s <project>/constitution.md .specify/memory/constitution.md`.
+- New specs do not auto-nest — `create-new-feature.sh` defaults to flat `specs/<NNN>-name`. To keep the namespace, set `SPECIFY_FEATURE_DIRECTORY=specs/<project>/<NNN>-name` before `/speckit-specify` (auto-persists to `feature.json`). Derive `<project>` from feature.json's current `feature_directory`; compute `<NNN>` by scanning `specs/<project>/`.
+- `.specify/feature.json` = active-feature pointer; kept uncommitted.
 
-Where `initial-sendbox/` targets **GitHub Copilot**, this layer targets **Claude Code**. It is a
-**self-contained, shareable kit** for *building and evaluating* `.claude/` setups, gathered under
-one folder. **Run its commands from inside `meta-env-setup/`** (`cd meta-env-setup`) — every path
-below is relative to that folder. See `meta-env-setup/README.md` for the overview.
+## meta-env-setup/
 
-- **`tools/`** — stdlib-only `scaffold_claude_setup.py` (bootstraps a `.claude/` skeleton, adds
-  skills/commands/agents, `--pool <topic>` parks a block in `tools-pool/` at zero routing-budget
-  cost), `mine_transcripts.py` (mines a repo's Claude Code session transcripts for repeated
-  commands / throwaway scripts / deploy-wait loops — evidence the code alone can't show), and
-  `validate_claude_setup.py` (CI-style structure check + four advisory **effectiveness** modes —
-  `--score` static audit, `--stale --repo` flags blocks citing identifiers no longer in the code,
-  `--route` routing tests, `--ablate` ablation; only the default gate fails CI). See `tools/README.md`.
-- **`evals/`** — methodology + per-repo eval data (task suites, routing tests) for the effectiveness
-  modes; tracked because `claude-setups/` is gitignored. See `evals/README.md`.
-- **`.claude/skills/`** — the kit's method skills (they auto-activate when you work inside the
-  kit): `claude-setup-scaffolder` (the whole pipeline), a kit-native measured `skill-creator-lite`
-  (author one skill, sharpened against `--score`), and `hook-design` (design an effective hook).
-  The repo-root `skills/skill-creator` is the heavier official Anthropic skill-creator
-  (behavioral eval — runs real Claude with/without the skill), kept as a reference upstream.
-- **`.claude/`** — the kit's *own* Claude Code setup: the `/new-claude-setup` and
-  `/audit-claude-setup` commands plus the read-only `setup-analyzer` agent. Because it now lives
-  here, those commands auto-load only when you work from inside `meta-env-setup/`. (Its
-  `settings.json` ships with empty permissions on purpose — add your own.)
-- **`claude-setups/<repo>/`** — complete `.claude` setups authored here for *other* repos
-  (currently `DL-Project`, `project-VLSI`, `Integrated_HWSW`, and `System_Design_SelfLearn`),
-  each with a dry-run-by-default `install.sh`. Never written into the real repos automatically;
-  gitignored. See `claude-setups/README.md`.
+Run everything from inside it (`cd meta-env-setup`) — its `.claude/` commands/agents auto-load only from there, and all paths below are relative to it. Stdlib only, zero deps. See `meta-env-setup/README.md`, `tools/README.md`.
 
-Validate + score every setup (and the kit's own), from inside `meta-env-setup/`:
+- `tools/`: `scaffold_claude_setup.py` (bootstraps a `.claude/` skeleton; `--pool <topic>` parks a block in `tools-pool/` at zero routing-budget cost), `mine_transcripts.py` (mines session transcripts for repeated commands / throwaway scripts / deploy-wait loops), `validate_claude_setup.py` (structure gate + advisory modes `--score`, `--stale --repo`, `--route`, `--ablate` — only the default gate fails CI).
+- Commands: `/new-claude-setup` (greenfield end-to-end loop), `/upgrade-claude-setup` (brownfield: import live `.claude/`, reconcile blocks ADD/FIX/REWRITE/KEEP/CUT), `/refine-setup` (measure → critique → rewrite → re-measure), `/audit-claude-setup` (structure + frontmatter + weight check).
+- Agents (read-only): `setup-analyzer`, `block-author`, `setup-critic`. Skills: `claude-setup-scaffolder`, `skill-creator-lite`, `hook-design`.
+- `claude-setups/<repo>/` — setups authored for other repos, dry-run-by-default `install.sh`; gitignored, never auto-written into real repos. `evals/` — task suites / routing tests (tracked because `claude-setups/` isn't).
+
 ```bash
 cd meta-env-setup
+python tools/test_audit.py                                         # 24/24 tests
 python tools/validate_claude_setup.py claude-setups/*/ .            # structural gate
 python tools/validate_claude_setup.py claude-setups/*/ . --score    # + effectiveness/minimality score
 ```
 
-## Common commands
+## Conventions
 
-Python lint/format (CI pins **ruff 0.4.4**), run from `initial-sendbox/`:
-```bash
-ruff check src/ hooks/
-ruff format src/ hooks/ --check
-```
-
-The `test-project` package (run from `initial-sendbox/test-project/`):
-```bash
-pip install -e ".[dev]"          # or: uv pip install -e ".[dev]"  — installs torch + pytest
-pytest                            # all tests (testpaths = tests/)
-pytest tests/test_model.py        # one file
-pytest tests/test_model.py::test_name   # one test
-```
-
-Validate agent files / governance (mirrors the CI checks), from `initial-sendbox/`:
-```bash
-# every .agent.md must have YAML front-matter with name + description
-python hooks/governance-audit --path .github/agents --output /tmp/audit.jsonl --fail-on critical
-actionlint                        # lints the workflow YAML
-```
-
-## Conventions to follow (from copilot-instructions.md & AGENTS.md)
-
-These are explicit project rules, not generic advice:
-
-- The author is learning **industry-standard** practices — write code as a professional would,
-  and **briefly explain the *why*** behind conventions and design decisions.
-- **C++** → Google C++ Style Guide; **Python** → Google Python Style Guide. Prefer simplicity
-  over clever one-liners or heavy abstractions.
-- Consult relevant `skills/` files before generating code (e.g. `pytorch-best-practices.md` for ML).
-- **Do not create new test frameworks** that don't already exist, and **do not add dependencies**
-  without explaining the trade-off. Prefer **pytest** (Python) and **Google Test / gtest** (C++).
-
-## Gotcha: dormant workflows
-
-`initial-sendbox/.github/workflows/` (`ci.yml`, `agent-validation.yml`) reference paths relative
-to a repo root (`src/`, `hooks/`, `.github/agents`). Since they now live in a **subfolder**, GitHub
-Actions will not auto-run them from this hub's root — they're effectively documentation/reference
-for the commands above unless invoked manually. Adjust paths (or relocate the workflows) if you
-want them to actually run in CI.
+- Author is learning industry-standard practice — write code as a professional would, and briefly explain the *why* behind conventions/design decisions.
+- Prefer simplicity over clever one-liners or heavy abstractions.
+- Don't add dependencies without stating the trade-off; don't invent new test frameworks. Prefer pytest.
