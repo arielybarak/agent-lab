@@ -90,6 +90,39 @@ novices).
   --score` to *improve the template later*), never a build-time dependency of *producing* it
   (DESIGN § "Relationship to meta-env-setup").
 
+## Clarifications
+
+### Session 2026-07-11
+
+- Q: `System_Design_SelfLearn/.claude/`'s on-disk location is a hardcoded absolute path
+  (`/home/barak/System_Design_SelfLearn/`, FR-001) — how should the distillation resolve it? → A:
+  **Parameterized, defaulting to the current path** — the reference-course location becomes a
+  configurable input (e.g. an environment variable or config value) rather than a fixed absolute
+  path; when unset, it defaults to today's `/home/barak/System_Design_SelfLearn/`. This keeps the
+  reference **external and read-only** (its own Key Entities framing) rather than vendoring a
+  personal, unvalidated course into the repo.
+- Q: The reference `lesson-consistency-reviewer` agent mixes a generic lesson-consistency check
+  with SD-specific checklist items — where does it land? → A: **Split** — the generic capability
+  (arc-order + running-example consistency + numbering + file:line-cited findings, ranked
+  Critical/Warning/Nit) becomes **core** (FR-010). Of its SD-specific checklist items: the
+  diagram-existence check generalizes to the existing **diagrams optional module** (relevant only
+  when that module is enabled, FR-011); the C++/Python phase-language rule and the
+  `patterns_v2`/`patterns_v1` duplication-drift check are **dropped** — both are artifacts of SD's
+  own curriculum/repo history with no generalizable home.
+- Q: What format should the template's version stamp use? → A: **Semantic versioning**
+  (MAJOR.MINOR.PATCH), mirroring the constitution's own versioning policy — so a rubric-only
+  re-stamp (a MINOR/PATCH bump) reads as distinguishable from a full re-distillation (a MAJOR bump).
+- Q: Should "small mandatory core" have a hard size yardstick? → A: **No formal yardstick** —
+  "small" stays a qualitative judgment call, assessed case-by-case (e.g. at `/speckit-plan`), not
+  tied to a numeric ceiling or to `meta-env-setup`'s scoring tool.
+- Q: How many sample topics, and who performs, the pre-pipeline paper-walkthrough (SC-003/SC-012)?
+  → A: **2 topics, agent-performed** — **"Introduction to Psychology"** (theory-heavy) and **"Python
+  Programming"** for an intelligent learner with no prior programming background
+  (procedural/code-heavy), spanning different material shapes so the core's neutrality claim isn't
+  validated against just one easy-fitting topic. The walkthrough is performed by an agent (reasoning
+  through it, no code automation); the maintainer MAY review the resulting checklist but there is no
+  mandatory human-approval gate for it.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Distill a topic-neutral, tiered template from critically-filtered, research-backed ideas (Priority: P1)
@@ -291,7 +324,10 @@ other two profiles to exist.
 - **FR-001**: The distillation MUST treat `System_Design_SelfLearn/.claude/` as an **unvalidated
   source of ideas, not a proven reference** — it was never delivered to or validated by a real
   learner. It MUST be read-only (never copied wholesale or mutated), and **no** element may be
-  carried into the template **solely because the reference course contains it**.
+  carried into the template **solely because the reference course contains it**. The reference
+  course's on-disk location MUST be a **configurable input** (e.g. an environment variable or
+  config value), not a hardcoded path, **defaulting to `/home/barak/System_Design_SelfLearn/`**
+  when unset.
 - **FR-002**: Every idea taken from the reference course MUST pass an explicit **critical-thinking
   filter** — a recorded judgment of whether it is genuinely sound pedagogy versus an untested
   artifact of one hand-built course (Principle III, weigh reliability not existence).
@@ -337,7 +373,10 @@ other two profiles to exist.
   math, history, … — with no System-Design assumption) and MUST hold the evidence-**invariant**
   machinery: at minimum the backward-design backbone (outcomes → assessment/evidence → learning
   experiences), the canonical lesson arc (problem/goal framing → activation → demonstration →
-  practice + feedback → integration/transfer), formative-feedback loops, and the quality rubric —
+  practice + feedback → integration/transfer), formative-feedback loops — including a topic-neutral
+  **lesson-consistency check** (arc-order, running-example consistency, numbering conventions,
+  file:line-cited findings ranked Critical/Warning/Nit), generalized from the reference
+  `lesson-consistency-reviewer` per FR-002 — and the quality rubric —
   **grounded in the research digest** (UbD, Merrill, Gagné), not adopted from the reference course on
   faith — **plus** `/improve-course`, `/new-lesson`, and `/course-report` as operational tooling kept
   via the **critical-thinking filter** (FR-002) as sound practice, since the research digest does not
@@ -345,7 +384,11 @@ other two profiles to exist.
   reference course had it (FR-001).
 - **FR-011**: The reference course's SD-specific capabilities (katas, diagrams, Socratic teaching,
   pattern-catalog) MUST be expressed as **optional modules** (or, where structurally consequential, a
-  **profile** per FR-022), never as mandatory core.
+  **profile** per FR-022), never as mandatory core. The **diagrams** module additionally inherits the
+  reference `lesson-consistency-reviewer`'s diagram-existence check (does a lesson's referenced schema
+  image actually exist); that reviewer's phase-based language rule and its `patterns_v2`/`patterns_v1`
+  duplication-drift check are **dropped** — pure artifacts of SD's own curriculum/repo history with no
+  generalizable module.
 - **FR-012**: Each optional module MUST be **self-contained** — enabling or disabling it MUST NOT
   break the mandatory core, a profile, or any other module (no module is a hidden dependency of the
   core).
@@ -374,10 +417,13 @@ other two profiles to exist.
 
 **Freeze, version & self-description (Principle V)**
 
-- **FR-016**: The template MUST carry a **single version identifier (stamp)** that uniquely names the
-  distillation snapshot and that a copy can record and later compare against. **This same stamp IS the
-  rubric's version identity** (004 FR-005) — the factory maintains **one** version identity across the
-  template and its rubric asset, never two independent counters.
+- **FR-016**: The template MUST carry a **single version identifier (stamp)**, expressed as
+  **semantic versioning** (MAJOR.MINOR.PATCH, mirroring the constitution's own versioning policy),
+  that uniquely names the distillation snapshot and that a copy can record and later compare
+  against. A full re-distillation is a MAJOR bump; a narrower rubric-only re-stamp (Edge Cases) is
+  a MINOR/PATCH bump. **This same stamp IS the rubric's version identity** (004 FR-005) — the
+  factory maintains **one** version identity across the template and its rubric asset, never two
+  independent counters.
 - **FR-017**: The template MUST be a **frozen artifact**: per-course specialization happens by
   overlay (001), and the template MUST NOT be edited to serve an individual course.
 - **FR-018**: The template MUST be **self-describing** about which pieces are **core**, which belong
@@ -434,6 +480,8 @@ other two profiles to exist.
 - **Reference course** — `System_Design_SelfLearn/`, the hand-built first course; **read-only,
   UNVALIDATED source material** (never delivered to a real learner), external to the factory. Its
   root `.claude/` is an **idea pool weighed with critical thinking**, not an authoritative input.
+  Its on-disk location is a **configurable input**, defaulting to
+  `/home/barak/System_Design_SelfLearn/` (FR-001) — never a hardcoded absolute path.
 - **External research digest** — the Perplexity-style search results (an `.md` in this feature
   folder) on how strong, topic-neutral course templates and quality rubrics are structured; the
   reliability anchor the reference course is cross-checked against, so SD is not the sole source.
@@ -468,18 +516,23 @@ other two profiles to exist.
 
 ### Measurable Outcomes
 
-- **SC-001**: **100%** of reference `.claude/` assets (every agent, command, skill, hook) have a
-  recorded classification verdict **and** a rationale — **0** assets left unclassified.
+- **SC-001**: **100%** of reference `.claude/` assets (every agent, command, skill, hook, and any
+  other file in the reference `.claude/`, per FR-006) have a recorded classification verdict **and**
+  a rationale — **0** assets left unclassified.
 - **SC-002**: The mandatory core contains **0** topic-specific terms (verifiable by scanning for
   "System Design", "HomeOS", "patterns_v1", "capacity"/"QPS", and other domain wording).
 - **SC-003**: The **mandatory core alone** (all optional modules disabled) produces a viable course
-  shape for at least **1** unrelated sample topic, with **0** optional modules required. **Before 001
-  exists to drive this end-to-end**, "produces a viable course shape" is verified by a **structured
-  paper-walkthrough**: manually apply the core's backward-design backbone, lesson arc, and rubric to
-  the sample topic and confirm each step produces a sensible artifact (outcomes → assessment →
-  lesson-arc outline → rubric-checkable draft), recorded as a checklist — not requiring the pipeline
-  to run. Once 001 exists, re-verify by actually driving the pipeline; the paper-walkthrough is a
-  pre-pipeline proxy, not a permanent substitute.
+  shape for **2** unrelated sample topics spanning different material shapes — **"Introduction to
+  Psychology"** (concept/theory-heavy) and **"Python Programming"** for an intelligent learner with
+  no prior programming background (procedural/code-heavy) — with **0** optional modules required.
+  **Before 001 exists to drive this end-to-end**, "produces a viable course shape" is verified by a
+  **structured paper-walkthrough performed by an agent** (reasoning through it; no code automation,
+  and no mandatory human-approval gate — the maintainer MAY review the resulting checklist but is
+  not required to): for each sample topic, apply the core's backward-design backbone, lesson arc, and
+  rubric to sketch **outcomes → assessment → a one-lesson arc outline → a rubric-checkable draft**,
+  confirming each step produces a sensible artifact, recorded as a checklist — not requiring the
+  pipeline to run. Once 001 exists, re-verify by actually driving the pipeline; the paper-walkthrough
+  is a pre-pipeline proxy, not a permanent substitute.
 - **SC-004**: Every optional module can be independently enabled or disabled with **0** breakage of
   the mandatory core (each module toggled off leaves a working core).
 - **SC-005**: The rubric asset's core layer holds **exactly the 5** generic dimensions, and **100%**
@@ -506,10 +559,11 @@ other two profiles to exist.
   profile — MVP or later-increment — reuses the core invariants and reconfigures only the variable
   dimensions.
 - **SC-012**: Selecting any **shipped** profile (MVP: default only; growing as User Story 4
-  increments land) yields a coherent course structure for a matching sample topic — each
-  later-increment profile is validated **independently at the time it ships**, not en masse — and a
-  course that names **no** profile falls back to the default **100%** of the time (never an undefined
-  structure). **Before 001 exists**, "coherent course structure" is verified by the same
+  increments land) yields a coherent course structure for **both of SC-003's sample topics**
+  (*Introduction to Psychology*, *Python Programming*) — each later-increment profile is validated
+  **independently at the time it ships**, not en masse — and a course that names **no** profile
+  falls back to the default **100%** of the time (never an undefined structure). **Before 001
+  exists**, "coherent course structure" is verified by the same agent-performed,
   structured-paper-walkthrough proxy as SC-003 (applied per profile, checking that the profile's
   macro-spine/checkpoint reconfiguration produces a sensible outline); re-verified by an actual
   pipeline run once 001 exists.
@@ -544,6 +598,9 @@ other two profiles to exist.
 - **The initial optional-module set is derived from the reference course's SD-specific
   capabilities** (katas, diagrams, Socratic, pattern-catalog); the module set may grow as later
   courses need new ones.
+- **"Small" mandatory core has no formal size ceiling** — it stays a qualitative judgment call,
+  assessed case-by-case (e.g. at `/speckit-plan`), not a numeric limit or a `meta-env-setup`
+  scoring-tool threshold (settled 2026-07-11).
 - **Module granularity is an implementation detail** — what counts as one module is left to the plan,
   provided each module is independently toggleable (FR-012) and self-described (FR-018).
 - **A viable "course shape"** (SC-003) means the core's syllabus + lesson-arc + rubric +

@@ -57,6 +57,18 @@ rule 8), a resuming invocation simply mints a new token and re-acquires — the 
 to persist or be recognized across a park boundary. `acquired_at` / `last_progress_at` are ISO-8601
 UTC; the stale-reclaim decision uses `last_progress_at` vs the configured timeout, not the token.
 
+### Blocking on inline user input (ask-moments) vs. the lock
+
+A handler MAY block on **inline user input** mid-run — an **ask-moment**, not a gate (e.g. 002's
+post-research divergence question, spec 002 research R3). Such a block persists no unit, so it does not
+refresh `last_progress_at`; a long block MAY therefore be **stale-reclaimed** by another invocation.
+This is safe **iff** the handler has **persisted its sub-phase checkpoint before blocking**
+(persist-before-block): a reclaiming invocation then resumes at that checkpoint and re-asks, losing no
+work. Handlers that block on inline input **MUST** persist-before-block — the divergence ask does so by
+writing `syllabus_subphase = composed` (and recording the pending question) *before* asking, so the ask
+may safely outlive the stale window. This keeps ask-moments outside the lock's liveness accounting
+without risking a lost or double-applied answer.
+
 ## Rules consumers must honor
 
 1. **Never hand-edit the JSON block** — go through `progress.py`, which enforces legal transitions

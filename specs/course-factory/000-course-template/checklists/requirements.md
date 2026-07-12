@@ -36,11 +36,18 @@
   research digest (`research-digest.md` §5) → **one core + archetype profiles + optional modules**,
   not siloed per-subject templates. Encoded in FR-009/010 + the new **Archetype profiles** group
   (FR-022–FR-025), SC-011/012, and constitution Principle IX (v1.1.0).
-- Two open decisions remain for `/speckit-clarify` (house style — kept as questions, not embedded
-  `[NEEDS CLARIFICATION]` markers):
-  1. **Distillation validation depth** — is SC-003/SC-012's "viable course shape / coherent per
-     profile" proven by an actual dry-run generation, or by a structural/neutrality inspection only?
-  2. **`lesson-consistency-reviewer` placement** — core (topic-neutral consistency check) vs an
-     optional module; the spec assumes core by default but this is worth confirming.
-  3. **Initial profile set** — ship exactly the 4 (3 consequential + default), or also include
-     theory-vs-procedural as distinct profiles from the start? (FR-023 sets the floor, not the cap.)
+- **Resolved (2026-07-11, `/speckit-clarify`):**
+  1. **Distillation validation depth** — settled as a 2-topic (*Introduction to Psychology*,
+     *Python Programming*), agent-performed, structured paper-walkthrough (no dry-run pipeline
+     needed pre-001; no mandatory human-approval gate). See spec's Clarifications + SC-003/SC-012.
+  2. **`lesson-consistency-reviewer` placement** — settled as a **split**: the generic
+     consistency-check capability → core (FR-010); the diagram-existence check → the `diagrams`
+     module (FR-011); the phase-language rule and `patterns_v2`/`patterns_v1` drift check →
+     dropped. See spec's Clarifications.
+  3. **Initial profile set** — already settled by the Part A/B/C reconciliation pass (2026-07-11,
+     predating this clarify session): procedural/code is a later-increment candidate, not part of
+     the initial ship set (FR-023, Assumptions, constitution Principle IX). This checklist note was
+     stale; no clarify question needed.
+  Two other decisions were also resolved this session, not originally tracked here: the reference
+  course's on-disk location (now a configurable input, FR-001) and the template version-stamp
+  format (now semantic versioning, FR-016).

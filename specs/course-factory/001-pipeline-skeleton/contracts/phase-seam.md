@@ -34,10 +34,19 @@ The handler is responsible for **writing its own artifact(s)** into `course_dir`
 before returning. The orchestrator owns `current_phase`, `phases[].gate_status`, `active_loop`, and
 the `lock`.
 
+The envelope is the orchestrator's **push**; `course_dir` additionally grants the handler **read**
+access to the course-folder files the driver maintains — notably **`FEEDBACK.md`** (gate-event
+feedback, FR-026), which the syllabus handler reads to revise after a change request (see the
+`user-approval` gate-type semantics below). Reading a driver-maintained course-folder file via
+`course_dir` is a ratified handler input, not a private side channel.
+
 ## Gate-type semantics the orchestrator enforces (FR-011)
 
 - **syllabus / `user-approval`** — handler composes; orchestrator parks for the user; approval
-  recorded before advance. Post-freeze changes are forward diffs (FR-023).
+  recorded before advance. On a **change request** (not approval) the orchestrator **re-invokes** the
+  handler, which reads the user's revision comments from **`FEEDBACK.md`** in `course_dir` (the driver
+  appended them there as the gate event occurred — FR-026 / data-model rule 9), revises, and re-parks.
+  Post-freeze changes are forward diffs (FR-023).
 - **skeletons / `agent-then-user`** — handler runs the agent review loop (cap 3); on agent pass the
   orchestrator parks for the **blocking** user scan (FR-024). A change request re-enters the handler
   with a **fresh** 3-round cap, then re-parks for another scan.

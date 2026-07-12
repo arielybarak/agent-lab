@@ -17,7 +17,7 @@ the project constitution at [`.specify/memory/constitution.md`](../../.specify/m
 
 | # | Spec | Owns | Depends on | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **000** | **Course-Template Distillation** | distill the frozen, versioned, **three-tiered** `course-template/` (**core + archetype profiles + optional modules**): gather ideas from `System_Design_SelfLearn/.claude/` (**unvalidated — critical-thinking filter, not authority**) **plus an external research digest**, classify every reference asset (keep-core/demote-module/drop), strip topic-specifics, two-layer rubric shape, version stamp | reference course (unvalidated, read-only) + external research digest | **Drafted** (research digest in; tiering = one core + profiles) — ready for `/speckit-clarify` |
+| **000** | **Course-Template Distillation** | distill the frozen, versioned, **three-tiered** `course-template/` (**core + archetype profiles + optional modules**): gather ideas from `System_Design_SelfLearn/.claude/` (**unvalidated — critical-thinking filter, not authority**) **plus an external research digest**, classify every reference asset (keep-core/demote-module/drop), strip topic-specifics, two-layer rubric shape, version stamp | reference course (unvalidated, read-only) + external research digest | **Clarified** (5 Qs resolved) — ready for `/speckit-plan` |
 | **001** | **Pipeline & Instantiation** | intake clarify interview, `COURSE_BRIEF.md` overlay + module selection, frozen-template copy/overlay/version contract, the phase state machine, gates, resume, delivery contract | 000 (course-template asset) | **Clarified** (2 Qs resolved) — ready for `/speckit-plan` |
 | **002** | **Syllabus** | research & sourcing → `SOURCES.md`, compose-as-mentor, the `.md`/`.ipynb` lesson-format decision, the user-approval gate's content | 001 | **Clarified** (2 Qs resolved) — ready for `/speckit-plan` |
 | **003** | **Lessons** | skeleton & lesson authoring, the parallel author–critic worker pool, the fake-student learnability check | 001, 004 (rubric) | **Clarified** (3 Qs resolved) — ready for `/speckit-plan` |
@@ -43,9 +43,10 @@ lesson arc + feedback loops + quality rubric + `/improve-course` + `/new-lesson`
 one core*, **not** siloed per-subject templates), and **opt-in optional modules**; shapes the rubric
 as **one-rubric-two-layers** (generic core + requestable topic add-ons); freezes + version-stamps the
 result. The tiering model is settled by the research digest (`research-digest.md` §5). **001's copy
-contract (FR-001) depends on this existing.** **Open questions:** distillation validation depth,
-`lesson-consistency-reviewer` core-vs-module placement — resolve with `/speckit-clarify` before
-planning.
+contract (FR-001) depends on this existing.** Clarified 2026-07-11 (5 Qs): reference-course
+location is configurable (not hardcoded), `lesson-consistency-reviewer` splits core/module/dropped,
+version stamp is semantic-versioned, "small" core has no formal size ceiling, and the pre-pipeline
+paper-walkthrough runs on 2 named sample topics, agent-performed.
 
 ### 001 — Pipeline & Instantiation → [`001-pipeline-skeleton/spec.md`](001-pipeline-skeleton/spec.md)
 
@@ -53,8 +54,9 @@ The front-end + the spine. Turns a rough `COURSE_SPEC.md` into a set-up, resumab
 including selecting the course's **archetype profile** (000's mechanism) — and walks it through the
 fixed phase sequence to delivery. Treats each phase's *internal work* as a black box behind its gate.
 **Its implementation is the factory's own build `.claude/`** (DESIGN roadmap task #2) — not a
-separate spec, see 001's Assumptions. **Open questions:** backward-transition policy (FR-023),
-post-skeleton user-scan blocking behavior (FR-024) — resolve with `/speckit-clarify` before planning.
+separate spec, see 001's Assumptions. Clarified 2026-07-07 (2 Qs): backward transitions are
+forward-diff-only (FR-023), and the post-skeleton user scan is a blocking gate (FR-024) — see the
+seam log below.
 
 ### 002 — Syllabus
 
@@ -125,6 +127,26 @@ Clarify outcomes per spec, recorded here so a cold session can honor settled dec
 index alone** — without opening each spec's `Clarifications` section. **Update this whenever
 `/speckit-clarify` resolves a marker** (mirror the spec's `Clarifications` entry, and note which
 sibling specs it constrains).
+
+### 000 — Course-Template Distillation · Session 2026-07-11
+
+- **Reference-course location = configurable input** (FR-001). The hardcoded absolute path
+  (`/home/barak/System_Design_SelfLearn/`) becomes an overridable config value/env var, defaulting
+  to that path when unset. → *Self-contained to 000.*
+- **`lesson-consistency-reviewer` = split** (FR-010/FR-011). Its generic capability (arc-order +
+  running-example consistency + numbering + file:line findings, ranked Critical/Warning/Nit) is
+  core; its diagram-existence check joins the `diagrams` module; its phase-language rule and
+  `patterns_v2`/`patterns_v1` drift check are dropped (no generalizable home). → *Self-contained to
+  000.*
+- **Template version stamp = semantic versioning** (FR-016). MAJOR = full re-distillation; MINOR/
+  PATCH = a rubric-only re-stamp. → *Constrains 001* (its drift-check compares semver) *and 004*
+  (the rubric's version identity is this same stamp).
+- **"Small" mandatory core = no formal yardstick.** Judged case-by-case at plan time, not tied to a
+  numeric ceiling or `meta-env-setup`'s scoring tool. → *Self-contained to 000.*
+- **Pre-pipeline validation = 2-topic, agent-performed paper-walkthrough** (SC-003/SC-012).
+  *Introduction to Psychology* (theory-heavy) + *Python Programming* for a non-programmer
+  (procedural/code-heavy); an agent reasons through outcomes → assessment → one-lesson-arc outline
+  → rubric-checkable draft per topic, no mandatory human-approval gate. → *Self-contained to 000.*
 
 ### 001 — Pipeline & Instantiation · Session 2026-07-07
 
