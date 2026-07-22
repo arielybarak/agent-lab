@@ -1,7 +1,19 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.2.1 → 1.2.2 (2026-07-11)
+Version change: 1.2.2 → 1.2.3 (2026-07-22)
+Bump rationale: PATCH — Principle II still described the evaluator as spot-checking
+  traceability. Both consuming specs settled on an EXHAUSTIVE check (003 FR-011/SC-004,
+  004 FR-007/SC-004 + contracts/citation-traceability.md), on the rationale that `[Sn]`
+  resolution is a cheap mechanical lookup, so sampling buys nothing. The B3-4 fix logged
+  in specs/course-factory/findings-FIXES.md reworded the spec bodies but never reached
+  this file or DESIGN.md § pipeline step 4 — reconciled here in the settled decision's
+  favor, per the governance clause ("disagreement with DESIGN.md is a defect to
+  reconcile"). The bar is TIGHTENED, never loosened; no principle redefined.
+Templates requiring update: none (no template restates the traceability rule).
+Follow-up: DESIGN.md § 4 citation bullet updated in the same pass.
+
+--- Prior: 1.2.1 → 1.2.2 (2026-07-11) ---
 Bump rationale: PATCH — Development Workflow steps 1–2 still described a separate
   "clarified spec" file and an "empty" `BUILD_PROGRESS.md`, both superseded when spec 001
   was reconciled (B1-5: `COURSE_BRIEF.md` is the sole on-disk home for intake's output;
@@ -125,8 +137,10 @@ The gates are the line between a course factory and a slop factory.
 
 Every factual claim in a course MUST be grounded in the spec's source material. **No
 invented numbers.** Claims carry `[Sn]` citation keys that resolve to the course's
-`SOURCES.md`, and the evaluator spot-checks **traceability** — that a claim maps to a
-real source (it verifies tracing, not truth). Sources MUST be weighed for reliability,
+`SOURCES.md`, and the evaluator checks **traceability exhaustively** — **every** key, not
+a sample — that a claim maps to a real source (it verifies tracing, not truth).
+Resolution is a cheap mechanical lookup, so completeness is affordable and sampling is
+not good enough. Sources MUST be weighed for reliability,
 not popularity: high stars are a strong green flag, **not proof**; each source is judged
 on reliability before it is trusted.
 
@@ -340,4 +354,4 @@ distillation of `DESIGN.md`; the two MUST stay consistent.
 - **The NON-NEGOTIABLE principles (I, II)** may not be waived by any plan; a plan that
   cannot satisfy them is out of scope, not an exception.
 
-**Version**: 1.2.2 | **Ratified**: 2026-07-07 | **Last Amended**: 2026-07-11
+**Version**: 1.2.3 | **Ratified**: 2026-07-07 | **Last Amended**: 2026-07-22

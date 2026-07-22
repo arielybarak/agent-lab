@@ -1,3 +1,14 @@
+# findings-FIXES — resolution log for REVIEW-findings.md
+
+> **Repaired 2026-07-22.** Entries A8–A14 were corrupted by terminal column-wrapping when this log
+> was first pasted in (padding spaces overwrote characters; A9, A10, and A14 were swallowed into
+> neighbouring lines). They have been reconstructed from `REVIEW-findings.md`'s Direction fields and
+> verified against the specs as they stand. Wording is a reconstruction; the resolutions themselves
+> were spot-checked on disk and are accurate.
+>
+> **Status: closed.** Every Part A / B / C finding is resolved or explicitly judgment-called. Treat
+> this file as historical record, not open work. **One exception, found 2026-07-22 —** see
+> "Incomplete sweep" at the end.
 
 Summary
 
@@ -13,11 +24,15 @@ Major
 - A5 — Factory's own .claude/ declared 001's implementation deliverable (not a separate spec) — judgment call, the other option was a standalone spec entry.
 - A6 — SYLLABUS.md + lesson files added to 001's delivery contract and constitution's file list.
 - A7 — Insights digest wired as an input to 001 intake (FR-025) and 002 composition (FR-016).
-- A8 — Constitution/DESIGN reconciled to settled cr-invoked-only; fake-student trigger isterminal-state, not "pass the rubric."                                                                                         - A9 — Ask-moments (open questions) vs. gates (appxplicitly distinct in 001 FR-014 and constitutionPrinciple IV.                                                                                                                  - A10 — Rubric version is the template stamp (000 ity. Added a narrower rubric-only re-stamp path in000's Edge Cases so comparison/ revisions have a landing spot without full re-distillation. Judgment call, matches Part C's C4-suggestion.
-- A11 — Delivery's gate = report generation, verdict informational. Reworded "certify" → "report" throughout (001, 004,        constitution, DESIGN) so a needs-work verdict stil
-                                                                                                                               Minor
-- A12 — procedural/code pinned as a later-increment profile, not part of the initial ship set (already true in 000's           FR-023/Assumptions; fixed the inconsistent Overvieext).
-- A13 — 000 FR-013 is now the canonical rubric-dimension list; 004 FR-001 references it instead of re-deriving.                - A14 — README seam #3 reworded to match reality ( 002 has no sub-phase state yet).
+- A8 — Constitution/DESIGN reconciled to the settled decisions: the harvest is user-invoked-only, and the fake-student trigger is the first two lessons reaching a terminal state, not "pass the rubric."
+- A9 — Ask-moments (open questions) vs. gates (approvals) made explicitly distinct in 001 FR-014 and constitution Principle IV.
+- A10 — Rubric version IS the template stamp (000 owns the single version identity). Added a narrower rubric-only re-stamp path in 000's Edge Cases so comparison/ revisions have a landing spot without a full re-distillation. Judgment call, matches Part C's C4-2 suggestion.
+- A11 — Delivery's gate = report generation, verdict informational. Reworded "certify" → "report" throughout (001, 004, constitution, DESIGN) so a needs-work verdict still reaches the delivered terminal state.
+
+Minor
+- A12 — procedural/code pinned as a later-increment profile, not part of the initial ship set (already true in 000's FR-023/Assumptions; fixed the inconsistent Overview text).
+- A13 — 000 FR-013 is now the canonical rubric-dimension list; 004 FR-001 references it instead of re-deriving.
+- A14 — README seam #3 reworded to match reality (002 has no sub-phase state yet).
 - A15 — DESIGN's pedagogy/ row updated to built/populated/not-wired; added a forward-pointer in 003 for the [Pn] citation slot needed at wiring time.
 - A16 — insights/ declared to start empty (confirmed on disk — no pre-existing corpus exists).
 
@@ -51,3 +66,25 @@ The two judgment calls
 2. C4-1 (004): Did not split into two spec-kit features. Added a "Plannable increments" note under Overview stating US1 is independently plannable/taskable ahead of US2–US4, strengthened US1's "Why this priority," and left an explicit recommendation that a real split (004-rubric-core + 004a-delivery-harvest-comparison) is a follow-up decision for the user, not executed here.
 
 Constitution bumped 1.2.0 → 1.2.1 (PATCH) for B0-2's /course-report completion — no principle redefined, just an enumeration fixed to match already-settled fact.
+
+---
+
+## Incomplete sweep — found 2026-07-22
+
+**B3-4 (spot-check → exhaustive traceability) was reported "reworded everywhere" but stopped at the
+spec bodies.** `003/spec.md` and `004/spec.md` were correctly updated, and 004 published
+`contracts/citation-traceability.md` making the exhaustive rule canonical. But the two *governing*
+documents were never touched:
+
+- `.specify/memory/constitution.md` Principle II — still read "the evaluator spot-checks traceability"
+- `course-factory/DESIGN.md` § pipeline step 4 — same wording
+
+This mattered because the constitution's own governance clause makes a DESIGN/constitution
+disagreement "a defect to reconcile," and the A8 pass had already established that pattern for the
+other two stale items. Reconciled in the settled decision's favor (constitution **1.2.2 → 1.2.3**,
+DESIGN step 4 citation bullet). The bar was tightened, never loosened, so no spec was in violation
+while the wording lagged.
+
+**Lesson for future sweeps:** a "reworded everywhere" claim should grep `.specify/memory/` and
+`DESIGN.md`, not just `specs/*/spec.md`. The `**Input**:` blocks at the top of each spec.md are
+verbatim historical records of the original user description and are correctly left unswept.

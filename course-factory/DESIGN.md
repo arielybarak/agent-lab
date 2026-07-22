@@ -154,8 +154,9 @@ scan** after skeletons, **rubric-only** after lessons.
      runs validate the concurrency model — see `specs/course-factory/003-lessons`), updating
      `BUILD_PROGRESS.md` after every lesson.
    - **Citations are mandatory.** Claims carry `[Sn]` keys resolving to `SOURCES.md`; the
-     evaluator spot-checks **traceability** (claim maps to a real source). It verifies tracing,
-     not truth.
+     evaluator checks **traceability exhaustively** — **every** key, not a sample (claim maps to a
+     real source). It verifies tracing, not truth. Resolution is a cheap mechanical lookup, so the
+     check is total rather than sampled (003 FR-011/SC-004, 004 FR-007/SC-004).
    - **Pool ordering — gate then fan out.** The pool authors the **first two lessons** before any
      others begin, runs the fake-student calibration below, and only then fans out the remaining
      lessons two at a time with the calibration folded in — no lesson beyond the first two starts
