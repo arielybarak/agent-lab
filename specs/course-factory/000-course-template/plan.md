@@ -71,7 +71,7 @@ feedback) do not gate template production directly — the plan's obligation is 
 | III. Mentor, Not Aggregator | Critical-thinking filter on every SD-sourced idea (FR-002); research wins ties (FR-004) | ✅ Pass |
 | IV. Clarify Early | Spec is Clarified (5 Qs, 2026-07-11); no open `NEEDS CLARIFICATION` | ✅ Pass |
 | V. Specialize by Overlay | Deliverable is frozen + semver-stamped + self-describing (FR-016/017/018) | ✅ Pass |
-| VIII. One Rubric, Two Layers | Rubric asset is 5-dimension core + add-on slots, shape-only, defers grading to 004 (FR-013/014/015) | ✅ Pass |
+| VIII. One Rubric, Two Layers | Rubric asset is 6-dimension core + add-on slots, shape-only, defers grading to 004 (FR-013/014/015) | ✅ Pass |
 | IX. Tiered Templates | The spec's spine: one core + profiles + modules, MVP ships default profile only (FR-009/022–025) | ✅ Pass |
 | I, VII, X, XI, XII (build-time) | Not gated at template-production time; core carries the rubric/lesson-arc/feedback-loop machinery these rely on downstream | ✅ N/A (carried, not enforced here) |
 

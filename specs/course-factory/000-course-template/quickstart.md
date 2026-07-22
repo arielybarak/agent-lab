@@ -38,9 +38,8 @@ grep -R -n -i -f course-factory/course-template/neutrality-terms.txt \
 
 ## Check 3 — Rubric two-layer shape (SC-005)
 
-- Open the rubric asset. Confirm the **core layer holds exactly the 5** dimensions (Technical
-  Correctness, Grounding/No-Fabrication, Pedagogical Flow, Coverage, Practicality) and **0**
-  topic-specific dimensions.
+- Open the rubric asset. Confirm the **core layer holds exactly the 6** dimensions (Technical Correctness, Grounding/No-Fabrication, Pedagogical Flow, Clarity, Coverage, Practicality) and
+  **0** topic-specific dimensions.
 - Confirm SD's checks (fabricated-capacity, cargo-cult) appear as **add-on slots**, not core.
 - Confirm the asset states weights/thresholds/hard-gate are **owned by 004** (defines shape only).
 
@@ -65,7 +64,7 @@ checklist:
 2. **Assessment** — does the backbone produce coherent evidence/assessment for those outcomes?
 3. **One-lesson arc** — instantiate the canonical lesson arc for one lesson: does it hold without a
    System-Design assumption?
-4. **Rubric-checkable draft** — sketch a lesson draft the 5-dimension core rubric can actually grade.
+4. **Rubric-checkable draft** — sketch a lesson draft the 6-dimension core rubric can actually grade.
 
 - Expected: each step produces a sensible artifact for **both** topics using the **core alone** — no
   optional module required. Record as a checklist (maintainer review optional, not required).

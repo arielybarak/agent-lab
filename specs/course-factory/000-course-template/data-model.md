@@ -84,7 +84,7 @@ One rubric, two layers (FR-013/014/015 — shape only, grading owned by 004).
 
 | Layer | Content | Rule |
 | :--- | :--- | :--- |
-| Core | Exactly 5 dimensions: Technical Correctness, Grounding/No-Fabrication, Pedagogical Flow, Coverage, Practicality | Canonical list (004 FR-001 references it). Flagged "adopted on judgment" — digest silent on rubrics (D8). 0 topic-specific dimensions (SC-005). |
+| Core | Exactly 6 dimensions: Technical Correctness, Grounding/No-Fabrication, Pedagogical Flow, Clarity, Coverage, Practicality | Canonical list (004 FR-001 references it). Flagged "adopted on judgment" — digest silent on rubrics (D8). 0 topic-specific dimensions (SC-005). |
 | Add-ons | Requestable per-course slots (e.g. SD's fabricated-capacity check, cargo-cult check) | SD-specific checks land here, never in core (FR-014). |
 
 Weights, per-dimension thresholds, hard-gate / no-aggregate-masking semantics → **deferred to 004**
