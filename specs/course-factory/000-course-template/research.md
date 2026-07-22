@@ -92,10 +92,15 @@ commits to, in Decision / Rationale / Alternatives form. No `NEEDS CLARIFICATION
 
 ## D8 — Rubric core is flagged "adopted on judgment," not research-validated
 
-- **Decision**: The 5-dimension rubric core (Technical Correctness, Grounding/No-Fabrication,
-  Pedagogical Flow, Coverage, Practicality) is recorded with the spec's "unproven, adopted on
-  judgment" flag, because `research-digest.md` is **silent on quality-rubric evidence** (a gap, not
-  thinness). A future rubric-scoped research pass may supersede it without a full re-distillation.
+- **Decision**: The 6-dimension rubric core (Technical Correctness, Grounding/No-Fabrication,
+  Pedagogical Flow, Clarity, Coverage, Practicality) is recorded with the spec's "unproven, adopted
+  on judgment" flag, because `research-digest.md` is **silent on quality-rubric evidence** (a gap,
+  not thinness). A future rubric-scoped research pass may supersede it without a full
+  re-distillation.
+  - *Amended 2026-07-22*: originally 5 dimensions; **Clarity** was added to FR-013 afterwards. It
+    is the one dimension sourced from **neither** the reference course **nor** the digest, so the
+    "adopted on judgment" flag applies to it most strongly of all — recorded rather than smoothed
+    over, since the whole point of D8 is not to overstate the rubric's grounding.
 - **Rationale**: FR-013 spells this out; it prevents the rubric core from being presented as
   research-backed when the digest doesn't cover it, while still letting the template ship.
 - **Alternatives rejected**: Presenting the rubric as research-validated (false grounding — violates

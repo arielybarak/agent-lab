@@ -1,0 +1,55 @@
+# Template self-description — the seam spec 001 reads so it can honor a profile + module
+# selection without inferring tiers from directory layout.
+#
+# Invariants (see specs/course-factory/000-course-template/contracts/template-manifest.md):
+#   1. `version` == the VERSION file. One identity, never two.
+#   2. Exactly one profile has `default: true`.
+#   3. Every path here exists on disk and has a matching CLASSIFICATION.md target.
+#   4. Every `modules.*.depends_on` toward core is empty — any module may be toggled off.
+#   5. A piece appears in exactly one tier; core is never listed under profiles or modules.
+
+version: "1.0.0"
+
+# Mandatory tier — always copied, never toggleable.
+core:
+  - .claude/skills/backward-design/SKILL.md
+  - .claude/skills/lesson-arc/SKILL.md
+  - .claude/skills/quality-rubric/SKILL.md
+  - .claude/agents/lesson-consistency-reviewer.md
+  - .claude/agents/course-evaluator.md
+  - .claude/commands/improve-course.md
+  - .claude/commands/new-lesson.md
+  - .claude/commands/course-report.md
+
+# Archetype profiles — configurations over the one core. Exactly one is selected per course;
+# a course naming none falls back to the `default: true` profile.
+# The mechanism itself is documented in profiles/README.md.
+profiles:
+  default:
+    default: true
+    entry_point: theory-first
+    spine: linear-spiral
+    pieces:
+      - profiles/default/spine.md
+  # pbl-cbl / cbe-mastery / guided-inquiry: later, independent increments (FR-023). Absent at MVP.
+
+# Opt-in modules — each independently toggleable, each self-contained.
+modules:
+  diagrams:
+    pieces:
+      - .claude/skills/diagrams/SKILL.md
+      - .claude/commands/add-diagram.md
+    depends_on: []
+  katas:
+    pieces:
+      - .claude/skills/katas/SKILL.md
+    depends_on: []
+  pattern-catalog:
+    pieces:
+      - .claude/skills/pattern-catalog/SKILL.md
+    depends_on: []
+  socratic:
+    pieces:
+      - .claude/agents/socratic-mentor.md
+      - .claude/commands/teach.md
+    depends_on: []

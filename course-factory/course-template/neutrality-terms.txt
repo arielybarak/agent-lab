@@ -1,0 +1,18 @@
+System Design
+System_Design_v1
+HomeOS
+HomeOS-Cloud
+Smart Home OS
+HomeHub
+patterns_v1
+patterns_v2
+capacity
+QPS
+GoF
+Gang of Four
+design pattern
+Micro-Do
+graphviz
+Zigbee
+Course_Syllabus.ipynb
+autodidact

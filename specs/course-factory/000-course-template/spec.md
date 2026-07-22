@@ -213,8 +213,8 @@ recording the stamp, bump the template version, and confirm the stamp comparison
 ### User Story 3 - Shape the quality rubric as one-rubric-two-layers (Priority: P3)
 
 The template's quality-rubric asset is structured as **one rubric, two layers**: a generic **core**
-(Technical Correctness, Grounding / No-Fabrication, Pedagogical Flow, Coverage, Practicality) plus
-**requestable topic add-ons**. The reference course's SD-specific checks (fabricated capacity
+(Technical Correctness, Grounding / No-Fabrication, Pedagogical Flow, Clarity, Coverage,
+Practicality) plus **requestable topic add-ons**. The reference course's SD-specific checks (fabricated capacity
 numbers, cargo-cult "just add X") become **add-ons**, not core dimensions — and the rubric asset
 fixes only the *shape*, leaving grading weights and thresholds to spec 004.
 
@@ -541,7 +541,7 @@ other two profiles to exist.
   is a pre-pipeline proxy, not a permanent substitute.
 - **SC-004**: Every optional module can be independently enabled or disabled with **0** breakage of
   the mandatory core (each module toggled off leaves a working core).
-- **SC-005**: The rubric asset's core layer holds **exactly the 5** generic dimensions, and **100%**
+- **SC-005**: The rubric asset's core layer holds **exactly the 6** generic dimensions, and **100%**
   of the reference rubric's SD-specific checks are expressed as topic add-ons — **0** SD-specific
   dimensions in the core.
 - **SC-006**: The template carries a version stamp, and a copy that recorded an older stamp detects a

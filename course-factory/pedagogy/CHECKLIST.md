@@ -4,7 +4,7 @@
 considered populated. Authored **before** transcription (Phase 0) so the batch critique reviews
 against it, not ad-hoc judgment.
 **Created**: 2026-07-10
-**Gates**: `catalog/*.md` (8 entries), `MYTHS.md`, `SOURCES.md`
+**Gates**: `catalog/*.md` (8 entries), `MYTHS.md`, `SOURCES.md`, `DIGEST.md`
 
 ## Evidence & Citation
 
@@ -38,6 +38,15 @@ against it, not ad-hoc judgment.
 - [x] Worked examples span more than one material shape across the catalog (not all programming, not all math)
 - [x] No entry depends on or references `System_Design_SelfLearn` or any other unreviewed existing course
 - [x] Entries are usable by specs 002/003 as written — self-contained, no "see the full paper" required to apply the technique
+
+## Digest fidelity (`DIGEST.md`)
+
+- [x] Every catalog entry's **"Boundary conditions & pitfalls"** survives into the digest — the digest may compress the definition and drop the worked example, but never a failure mode
+- [x] Digest evidence tiers are the catalog's **qualified** tiers verbatim, not collapsed to one bucket word (e.g. interleaving stays "high for inductive/discriminative, ambiguous for expository text")
+- [x] Every `[Pn]` key in the digest resolves to `SOURCES.md` and appears in the source it condenses — the digest introduces **no** citation of its own
+- [x] All 8 Axis-1 techniques appear, in `TAXONOMY.md`'s order
+- [x] Digest is marked **derived, never hand-edited**, and names `catalog/` as canonical on disagreement
+- [x] `MYTHS.md` entries appear in the digest with their debunking citations and the "use instead" column — the deny-list is not weakened by compression
 
 ## Notes
 

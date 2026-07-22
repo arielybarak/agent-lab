@@ -16,6 +16,7 @@ debunked claims as a guardrail against the model's own training-data priors.
 
 | File | Role |
 | :--- | :--- |
+| **`DIGEST.md`** | **Start here.** All 8 techniques on one screen — tier + when + **boundary conditions verbatim** — plus how they interact and a compact myths table. **Derived from `catalog/`, never hand-edited**; the catalog wins on any disagreement |
 | `TAXONOMY.md` | The two axes (8 techniques × material shapes), entry schema, tier rules, `[Pn]` namespace decision |
 | `CHECKLIST.md` | Quality gate the batch was reviewed against (authored *before* the content) |
 | `catalog/*.md` | 8 technique entries: what → evidence tier (qualified) → when → boundary conditions → worked example |
@@ -62,7 +63,12 @@ copy in `.claude/skills/mentor-research/`) for spec 002's own future research ru
 
 ## Consumption points (future wiring, unchanged)
 
-- **002** (syllabus compose-as-mentor) — draws on it when composing course structure.
+- **000** (course-template) — **wired**: the template's core `lesson-arc` and `backward-design`
+  skills route authoring here (`DIGEST.md` to choose, `catalog/` to author), and its
+  `quality-rubric` scores a `MYTHS.md` method as a Technical Correctness failure. The myth rule is
+  also stated standalone in the template, so it survives being copied out of the factory.
+- **002** (syllabus compose-as-mentor) — draws on it when composing course structure. Note that
+  **spacing and interleaving are settled at this level**, not per lesson.
 - **003** (skeleton/lesson drafting) — draws on it when authoring content.
 - **004** (rubric) — optional candidate input to a method-fit rubric add-on; not required for the
   rubric core.
