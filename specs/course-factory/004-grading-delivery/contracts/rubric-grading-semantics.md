@@ -14,7 +14,7 @@ numbers and the gate rule.**
 | Owned by 000 (the shape) | Owned by 004 (the semantics) |
 | :--- | :--- |
 | The two-layer structure (core + add-on slots) | The concrete `scale` (e.g. `1..5`) |
-| The five core-dimension **names** (FR-013) | Each dimension's `threshold` |
+| The six core-dimension **names** (FR-013) | Each dimension's `threshold` |
 | The semver `VERSION` = the rubric's identity | The `weight` (reporting only, **not** a gate input) |
 | The provenance record (FR-019) | The **hard-gate rule** (pass iff every dim ≥ threshold) |
 

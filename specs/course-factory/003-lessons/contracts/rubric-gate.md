@@ -9,7 +9,7 @@ contents** (FR-010) — it consumes the two properties below and nothing more.
 
 ## Property 1 — a pass is a per-dimension threshold (004 FR-004)
 
-- The rubric is a **generic core** (correctness, grounding, flow, coverage, practicality) **plus** any
+- The rubric is a **generic core** (correctness, grounding, flow, clarity, coverage, practicality) **plus** any
   **topic add-ons** the course spec requested (Principle VIII, 004 US1).
 - A lesson **passes** only if **every** dimension (core + requested add-ons) clears **its own** minimum
   bar. A strong dimension **MUST NOT** mask a failing one — there is no aggregate/average that lets a

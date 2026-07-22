@@ -232,3 +232,58 @@ Out-of-Scope bullet in the owning spec(s); the few-words version and full ration
 can copy it (000); then the spine and instantiation (001); then the first gate's depth (syllabus,
 002); the rubric must exist before lessons can be graded (004 core); lessons (003); delivery/feedback
 last.
+
+### Which model to use per phase
+
+The driver is **judgment density**, not task count. These specs split cleanly into *deciding what is
+right* (taste, cross-spec reasoning, prompt authoring — where a stronger model pays for itself) and
+*building to a settled contract* (stdlib Python against a written contract with pytest already
+specified — where a mid model is as good and much cheaper).
+
+| Slot | Model | Why |
+| :--- | :--- | :--- |
+| **000** template distillation | **Opus** | Highest judgment density in the project and almost no code. Classify every asset in an **unvalidated** reference repo keep-core/demote-module/drop *with rationale*, strip topic-specifics, define the rubric shape. Getting this wrong silently poisons all four downstream specs. |
+| **001** pipeline & instantiation | **Opus** for the orchestrator, phase-seam and state machine · **Sonnet** for `tools/` + tests | The seam (`phase-seam.md`, gate vocabulary, resume) is the contract every other spec builds against. `progress.py`/`diffs.py`/`instantiate.py`/`deliver_check.py` are mechanical against published schemas. |
+| **002** syllabus | **Opus** | Source reliability weighing, converge-or-cap discipline, mentor composition, divergence detection. Long-context research judgment — the failure mode is *plausible-but-wrong sourcing*, exactly what a weaker model hides well. |
+| **004 Phase 3** rubric core | **Opus** | Small surface (`rubric.md` + `rubric_gate.py` + `single_rubric_lint.py`), largest blast radius: it is the **one** definition of quality, and every lesson and course is gated on it. Small ≠ easy. |
+| **003** lessons | **Opus** for the four agents + the pool/loop skills · **Sonnet** for the four tools + tests | Biggest surface in the project, and cleanly split: authoring `mentor-author` / `lesson-evaluator` / `fake-student` is prompt engineering (judgment); `pool_scheduler.py`, `sn_resolve.py`, `citation_trace.py`, `author_envelope.py` are pure functions with contracts and test tables already written. |
+| **004 Phases 4–7** delivery, harvest, comparison | **Opus** for `course-evaluator` + `comparison-analyst` · **Sonnet** for `harvest.py`, `course_trace.py`, `COURSE_REPORT.md` plumbing | The independent course-level verdict is real judgment; append-only harvest mechanics are not. |
+
+**Haiku** is a fine fit for the tight mechanical loops *inside* a phase — re-running `pytest` to green,
+regenerating fixtures, updating `tools/README.md` — but not for owning a phase.
+
+> **Fable 5 — deliberately not slotted above.** It is plausibly the right model for the *prose-authoring*
+> roles (`mentor-author` drafting lessons, and the `comparison-analyst`), but that is inference from the
+> model's positioning, not something this project has measured. Per the same discipline applied to the
+> reference course and the rubric dimensions, it is recorded here as **unvalidated** rather than written
+> in as fact. Worth an A/B against Opus on a single lesson draft once 003 runs; adopt on evidence.
+
+**Runtime ≠ build time.** The table above is for *implementing* the specs. Which model each generated
+course's agents run on at course-build time is a separate, later decision — and a good candidate for
+the `insights/` digest to answer empirically.
+
+### What can run in parallel
+
+Most of the chain is genuinely serial. There are two real windows:
+
+**Window A — after 000 lands: `001` ∥ `004 Phase 3` (rubric core).** 004's US1 depends *only* on 000's
+rubric shape — **not** on 001 (see `004/plan.md` Primary Dependencies). They touch disjoint files: 001
+writes `course-factory/.claude/` + `tools/{progress,diffs,instantiate,deliver_check}.py`; 004 US1 writes
+`course-template/rubric.md` + `tools/{rubric_gate,single_rubric_lint}.py`.
+**One collision to manage:** `tools/README.md` — 001 T033 *creates* it, 004 T025 *appends* to it. Let 001
+own creation; 004's session appends after 001 merges.
+
+**Window B — after 003 lands: `004 Phase 5` (harvest) ∥ `004 Phase 6` (comparison).** Independent of each
+other. Phase 4 (course-evaluator) is *not* parallelizable — it needs `sn_resolve.py` from 003.
+
+Everything else is a hard chain: **002** needs 001's seam; **003** needs 001 + 002 + the rubric core.
+
+> **⚠️ Two sessions cannot share one checkout.** `/speckit-implement` resolves its target through the
+> single shared `.specify/feature.json` pointer, so a second concurrent session will clobber the first's
+> feature selection. `SPECIFY_FEATURE_DIRECTORY` overrides it (`.specify/scripts/bash/common.sh`), but it
+> cannot be set on a slash-command line and shell state does not persist between calls. **Use a separate
+> git worktree per parallel session** — each gets its own `.specify/feature.json` — and merge when done.
+>
+> Honest cost/benefit: Window A saves roughly the length of the *shorter* job (004 Phase 3 is ~7 tasks
+> against 001's ~33), at the price of worktree setup and a merge. **If you are working alone, just go
+> serial** — the parallelism here is worth it only when two sessions are genuinely running at once.

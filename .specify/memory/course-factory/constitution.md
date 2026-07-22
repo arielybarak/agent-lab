@@ -1,7 +1,24 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.2.2 → 1.2.3 (2026-07-22)
+Version change: 1.2.3 → 1.3.0 (2026-07-22)
+Bump rationale: MINOR — guidance materially expanded. Principle VIII's generic core
+  grows from five dimensions to six with the addition of **Clarity** (is the explanation
+  understandable on first read by the brief's stated audience). It is distinct from
+  Pedagogical Flow, which grades the *ordering* of material — a lesson can be correctly
+  sequenced and still impenetrable. Rationale for grading rather than merely checking it:
+  clarity is already probed twice in the pipeline (003's skeleton-evaluator checklist and
+  its once-per-course fake-student learnability check) but produced nothing gradeable, so
+  the signal never reached the scorecard or COURSE_REPORT.md. 000 FR-013 remains the
+  canonical owner of the list (finding A13); every other site references it.
+  MINOR, not PATCH: unlike the 1.2.1 enumeration fix, this is a new requirement — a sixth
+  hard gate every lesson and course must clear — not a correction to already-settled fact.
+Templates requiring update: none.
+Follow-up: 000 FR-013 + US/Key Entities, 004 spec/plan/research/data-model/tasks +
+  contracts/{rubric-grading-semantics,course-evaluator}.md, 003 contracts/rubric-gate.md,
+  and DESIGN.md updated in the same pass (18 sites, all enumerations reconciled).
+
+--- Prior: 1.2.2 → 1.2.3 (2026-07-22) ---
 Bump rationale: PATCH — Principle II still described the evaluator as spot-checking
   traceability. Both consuming specs settled on an EXHAUSTIVE check (003 FR-011/SC-004,
   004 FR-007/SC-004 + contracts/citation-traceability.md), on the rationale that `[Sn]`
@@ -219,7 +236,7 @@ review.
 ### VIII. One Rubric, Two Layers
 
 Quality is defined by **exactly one** rubric: a **generic core** (correctness, grounding,
-flow, coverage, practicality) plus **topic add-ons** the spec may request (e.g. a
+flow, clarity, coverage, practicality) plus **topic add-ons** the spec may request (e.g. a
 fabricated-capacity-numbers check). `comparison/` MAY propose revisions to that rubric and
 MUST NOT keep a rival one; **nothing else defines quality**. The rubric's **version identity is the
 template's version stamp** (Principle IX) — one identity across template and rubric, never two.
@@ -354,4 +371,4 @@ distillation of `DESIGN.md`; the two MUST stay consistent.
 - **The NON-NEGOTIABLE principles (I, II)** may not be waived by any plan; a plan that
   cannot satisfy them is out of scope, not an exception.
 
-**Version**: 1.2.3 | **Ratified**: 2026-07-07 | **Last Amended**: 2026-07-22
+**Version**: 1.3.0 | **Ratified**: 2026-07-07 | **Last Amended**: 2026-07-22

@@ -60,7 +60,7 @@ build order — `000 → 001 → 002 → 004-rubric-core → 003 → 004-deliver
 time**, so this plan targets each as a **contract + fixture**, exactly as spec 001 did for 000):
 
 - **000's rubric-shape asset + version stamp** (000 FR-013/015/016). 000 owns the two-layer *shape* +
-  the five core-dimension names + the semver `VERSION`; **004 fills the grading semantics** into that
+  the six core-dimension names + the semver `VERSION`; **004 fills the grading semantics** into that
   shape and shares 000's *single* version identity (never a rubric-only counter). Contract:
   [`contracts/rubric-grading-semantics.md`](contracts/rubric-grading-semantics.md); validated against
   the `tests/fixtures/rubric/` stand-in that 003 already defines.

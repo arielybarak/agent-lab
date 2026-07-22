@@ -16,7 +16,7 @@ behavior). Invoked by `/course-report` at delivery and available post-delivery f
 
 1. **Assemble the per-course rubric** = generic core + the add-ons `COURSE_BRIEF.md` requested. An
    unknown requested add-on is **surfaced**, not silently dropped (FR-002).
-2. **Score each dimension** (agent judgment — correctness, grounding, flow, coverage, practicality,
+2. **Score each dimension** (agent judgment — correctness, grounding, flow, clarity, coverage, practicality,
    and any add-on). Apply the **pass predicate** via `rubric_gate.py` (`rubric-grading-semantics.md`)
    — never an average.
 3. **Grounding** — run the exhaustive `[Sn]` traceability sweep (`citation-traceability.md`, over the

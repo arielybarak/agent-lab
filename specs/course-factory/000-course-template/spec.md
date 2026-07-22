@@ -224,15 +224,15 @@ to add-ons — is what lets the same template grade a math course and a systems 
 inspectable on the produced rubric asset alone.
 
 **Independent Test**: Inspect the template's rubric asset; confirm its core layer holds exactly the
-five generic dimensions; confirm every SD-specific check is expressed as an add-on slot, not a core
+six generic dimensions; confirm every SD-specific check is expressed as an add-on slot, not a core
 dimension; confirm the asset defines shape only and states that weights/thresholds/hard-gate
 semantics are owned by 004.
 
 **Acceptance Scenarios**:
 
 1. **Given** the template's rubric asset, **When** its core layer is read, **Then** it holds exactly
-   the five generic dimensions (Technical Correctness, Grounding / No-Fabrication, Pedagogical Flow,
-   Coverage, Practicality) and no topic-specific dimension.
+   the six generic dimensions (Technical Correctness, Grounding / No-Fabrication, Pedagogical Flow,
+   Clarity, Coverage, Practicality) and no topic-specific dimension.
 2. **Given** the reference rubric's SD-specific checks (capacity-number fabrication, cargo-cult),
    **When** they are distilled, **Then** they appear as **requestable topic add-ons**, selectable per
    course, not baked into the core.
@@ -290,7 +290,7 @@ other two profiles to exist.
 - **The research contradicts the reference course** — the **better-grounded** guidance wins and the
   reasoning is recorded (weigh reliability, not the fact that SD exists — Principle III).
 - **A reference asset intertwines a generic core with topic specifics** (e.g., the quality rubric
-  mixes the five generic dimensions with an SD capacity-number check) — the distillation **splits**
+  mixes the six generic dimensions with an SD capacity-number check) — the distillation **splits**
   it: the generic part goes to the core, the specific part becomes an add-on or module; it is not
   dropped wholesale nor kept with the specifics baked in.
 - **A reference asset is purely topic-specific with no generalizable core** (e.g.,
@@ -396,8 +396,14 @@ other two profiles to exist.
 **Rubric two-layer shape (Principle VIII)**
 
 - **FR-013**: The template's quality-rubric asset MUST follow **one rubric, two layers**: a generic
-  **core** of exactly five dimensions — **Technical Correctness, Grounding / No-Fabrication,
-  Pedagogical Flow, Coverage, Practicality** — plus a mechanism for **requestable topic add-ons**.
+  **core** of exactly six dimensions — **Technical Correctness, Grounding / No-Fabrication,
+  Pedagogical Flow, Clarity, Coverage, Practicality** — plus a mechanism for **requestable topic
+  add-ons**. **Clarity** grades whether an explanation is *understandable on first read* by the
+  brief's stated audience — distinct from Pedagogical Flow, which grades the *ordering* of
+  material: a lesson can be perfectly sequenced and still impenetrable. It is graded because
+  clarity is already probed twice in the pipeline (003's skeleton-evaluator checklist and its
+  fake-student learnability check) with no gradeable output; making it a dimension routes that
+  existing signal into the scorecard instead of discarding it.
   This is the **canonical definition** of the core dimension list; spec 004 references it rather than
   re-deriving it (see 004 FR-001). The external research digest (FR-003) grounds the course/lesson-arc
   structure (FR-010) but does **not** independently research quality-rubric evidence — it is silent on
@@ -503,7 +509,7 @@ other two profiles to exist.
   guided-inquiry (FR-023); **procedural/code** is deferred to a later increment (Assumptions).
 - **Optional module** — an opt-in add-on unit (katas, diagrams, Socratic drills, pattern-catalog,
   retrieval/spacing packs) a course may enable or disable independently of the core and profile.
-- **Quality-rubric asset** — the template's two-layer rubric: a generic **core** of five dimensions
+- **Quality-rubric asset** — the template's two-layer rubric: a generic **core** of six dimensions
   plus **topic add-on** slots; shape here, grading semantics in 004.
 - **Topic add-on** — a requestable, per-course rubric dimension (e.g., SD's fabricated-capacity
   check) that lives outside the generic core.

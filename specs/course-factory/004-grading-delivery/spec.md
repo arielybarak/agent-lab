@@ -93,7 +93,7 @@ decide when it's actually needed, not executed here.
 ### User Story 1 - Define the one-rubric-two-layers as the single quality contract (Priority: P1)
 
 The factory has **exactly one** rubric that defines quality: a generic core (correctness, grounding,
-flow, coverage, practicality) that always applies, plus optional topic add-ons the course spec can
+flow, clarity, coverage, practicality) that always applies, plus optional topic add-ons the course spec can
 request (e.g., a fabricated-capacity-numbers check). This rubric is the sole definition of quality —
 no rival rubric exists anywhere — and it is expressed so that spec 003 can consume it as the lesson
 gate and the course-evaluator can run on it as the engine.
@@ -112,7 +112,7 @@ and that it exposes a pass/fail gate a lesson evaluator (003) can apply.
 **Acceptance Scenarios**:
 
 1. **Given** the factory, **When** the rubric is inspected, **Then** it contains a generic core
-   (correctness, grounding, flow, coverage, practicality) that applies to every course.
+   (correctness, grounding, flow, clarity, coverage, practicality) that applies to every course.
 2. **Given** a course spec requesting a topic add-on, **When** the rubric is assembled for that
    course, **Then** the requested add-on is layered on top of the generic core; when none is
    requested, only the core applies.
@@ -243,8 +243,8 @@ revision is deliberately adopted.
 **The rubric — the single definition of quality**
 
 - **FR-001**: The factory MUST define quality with **exactly one** rubric: the generic core **named
-  and defined by 000 FR-013** (five dimensions: Technical Correctness, Grounding/No-Fabrication,
-  Pedagogical Flow, Coverage, Practicality — 000 owns that canonical list; this spec does not
+  and defined by 000 FR-013** (six dimensions: Technical Correctness, Grounding/No-Fabrication,
+  Pedagogical Flow, Clarity, Coverage, Practicality — 000 owns that canonical list; this spec does not
   re-derive it) plus **optional topic add-ons** the course spec can request. It is the **sole**
   definition of quality; no rival rubric may exist anywhere. 004 owns the rubric's **grading
   semantics** (weights, per-dimension thresholds, the hard-gate rule); 000 owns the **shape and
@@ -341,7 +341,7 @@ revision is deliberately adopted.
 ### Key Entities
 
 - **Rubric** — the single definition of quality: a generic core (correctness, grounding, flow,
-  coverage, practicality) plus optional spec-requested topic add-ons; versioned; no rival permitted.
+  clarity, coverage, practicality) plus optional spec-requested topic add-ons; versioned; no rival permitted.
 - **Generic core** — the always-applied rubric dimensions.
 - **Topic add-on** — an optional extra check a course spec requests (e.g., fabricated-capacity-numbers),
   layered on the core.

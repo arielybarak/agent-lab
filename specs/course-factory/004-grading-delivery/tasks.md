@@ -107,7 +107,7 @@ proves the predicate rejects aggregate masking and the lint rejects a rival.
 ### Implementation for User Story 1
 
 - [ ] T006 [US1] Author `course-factory/course-template/rubric.md` — fill 000's two-layer **shape**
-  (five core dimensions + add-on slots) with 004's grading **semantics**: concrete `scale`,
+  (six core dimensions + add-on slots) with 004's grading **semantics**: concrete `scale`,
   per-dimension `threshold`, `weight` (reporting only, **not** a gate input), the **hard-gate rule**,
   and the rubric **version = the template `VERSION`** (one identity). Per
   `contracts/rubric-grading-semantics.md`. Until 000 ships, this parameterizes the `rubric/` fixture.

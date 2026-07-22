@@ -109,7 +109,7 @@ breaking the "course is self-contained residue" model (DESIGN "Mental model").
 **Decision.** Treat 000/002/003 exactly as 001 treated 000: **not built at plan time**, so the plan
 targets each as a **contract + fixture**, but *by 004's build slot they exist* (README order runs
 000/001/002 and `004-rubric-core`, then 003, then `004-delivery`). The rubric seam is a clean
-division: **000 owns the two-layer *shape* + the five core-dimension names + the semver `VERSION`;
+division: **000 owns the two-layer *shape* + the six core-dimension names + the semver `VERSION`;
 004 fills the *grading semantics* into that shape** (concrete scale, per-dimension thresholds,
 weights, the hard-gate rule) and **shares 000's single version identity** (000 FR-016 ↔ 004 FR-005 —
 never a rubric-only counter). Validation now uses the `tests/fixtures/rubric/` stand-in 003 already

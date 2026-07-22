@@ -248,7 +248,7 @@ individual course.
 - **Match the reviewer to competence** — user judges structure/scope; automated eval judges
   correctness of material the user is still learning.
 - **One rubric, two layers** — a **generic core** (correctness, grounding, flow, coverage,
-  practicality) plus **topic add-ons** the spec can request (e.g. SD's fabricated-capacity-numbers
+  clarity, practicality) plus **topic add-ons** the spec can request (e.g. SD's fabricated-capacity-numbers
   check). `comparison/` proposes revisions to it; nothing else defines quality.
 - **Resumable by design** — `BUILD_PROGRESS.md` tracks the phase + per-lesson status; any session
   can pick up mid-course.

@@ -15,8 +15,8 @@ deterministic module that enforces a rule.
 
 The single definition of quality. **Two layers:**
 
-- **Generic core** — the five dimensions **named by 000 FR-013** (Technical Correctness,
-  Grounding/No-Fabrication, Pedagogical Flow, Coverage, Practicality). 004 does **not** re-derive the
+- **Generic core** — the six dimensions **named by 000 FR-013** (Technical Correctness,
+  Grounding/No-Fabrication, Pedagogical Flow, Clarity, Coverage, Practicality). 004 does **not** re-derive the
   list.
 - **Topic add-ons** — optional extra dimensions a course requests via `COURSE_BRIEF.md` (e.g.
   fabricated-capacity-numbers). Applied **only** when requested; an unknown requested add-on is
