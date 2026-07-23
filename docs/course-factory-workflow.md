@@ -28,15 +28,17 @@
 spec.md/plan.md, or address `/speckit-analyze` findings manually — then re-run whatever step
 that touched.
 
-## Current status (as of 2026-07-22)
+## Current status (as of 2026-07-23)
 
-All five specs are **Tasked** — each has `plan.md`, `research.md`, `data-model.md`, `contracts/`,
-`quickstart.md`, and `tasks.md`. Nothing is built yet.
+All five specs were **Tasked** as of 2026-07-22 — each has `plan.md`, `research.md`,
+`data-model.md`, `contracts/`, `quickstart.md`, and `tasks.md`. **001 is now Done** (implemented
+2026-07-23); see `specs/course-factory/README.md` for the authoritative per-spec status (000's own
+`tasks.md` T032 separately flags that its row here/there is stale, unrelated to this update).
 
 | Spec | Status | Next command |
 | :--- | :--- | :--- |
-| 000-course-template | Tasked | `/speckit-implement` |
-| 001-pipeline-skeleton | Tasked | `/speckit-implement` |
+| 000-course-template | Tasked (see note above) | `/speckit-implement` |
+| 001-pipeline-skeleton | **Done** | — (002 may now build against its seam) |
 | 002-syllabus | Tasked | `/speckit-implement` |
 | 003-lessons | Tasked | `/speckit-implement` |
 | 004-grading-delivery | Tasked | `/speckit-implement` (built in two slots — see build order) |

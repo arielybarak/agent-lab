@@ -1,0 +1,21 @@
+# Minimal frozen-template fixture (research R6) — the spec-000 stand-in that unblocks 001's US1
+# without the real course-template/. Same shape as contracts/template-manifest.md, deliberately
+# tiny: one core file, one default profile, one optional module.
+
+version: "1.0.0"
+
+core:
+  - .claude/skills/core-skill/SKILL.md
+
+profiles:
+  default:
+    default: true
+    entry_point: theory-first
+    pieces:
+      - profiles/default/spine.md
+
+modules:
+  sample-module:
+    pieces:
+      - .claude/skills/sample-module/SKILL.md
+    depends_on: []

@@ -18,7 +18,7 @@ the project constitution at [`.specify/memory/constitution.md`](../../.specify/m
 | # | Spec | Owns | Depends on | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **000** | **Course-Template Distillation** | distill the frozen, versioned, **three-tiered** `course-template/` (**core + archetype profiles + optional modules**): gather ideas from `System_Design_SelfLearn/.claude/` (**unvalidated — critical-thinking filter, not authority**) **plus an external research digest**, classify every reference asset (keep-core/demote-module/drop), strip topic-specifics, two-layer rubric shape, version stamp | reference course (unvalidated, read-only) + external research digest | **Tasked** — ready for `/speckit-implement` |
-| **001** | **Pipeline & Instantiation** | intake clarify interview, `COURSE_BRIEF.md` overlay + module selection, frozen-template copy/overlay/version contract, the phase state machine, gates, resume, delivery contract | 000 (course-template asset) | **Tasked** — ready for `/speckit-implement` |
+| **001** | **Pipeline & Instantiation** | intake clarify interview, `COURSE_BRIEF.md` overlay + module selection, frozen-template copy/overlay/version contract, the phase state machine, gates, resume, delivery contract | 000 (course-template asset) | **Done** — `.claude/` + `tools/` + `tests/` built, all 36 tasks complete, 83/83 pytest green (2026-07-23) |
 | **002** | **Syllabus** | research & sourcing → `SOURCES.md`, compose-as-mentor, the `.md`/`.ipynb` lesson-format decision, the user-approval gate's content | 001 | **Tasked** — ready for `/speckit-implement` |
 | **003** | **Lessons** | skeleton & lesson authoring, the parallel author–critic worker pool, the fake-student learnability check | 001, 004 (rubric core) | **Tasked** — ready for `/speckit-implement` |
 | **004** | **Grading & Delivery** | the rubric & course-evaluator internals, `COURSE_REPORT.md` scorecard, `FEEDBACK.md` → `insights/` harvest, `comparison/` | 001 | **Tasked** — ready for `/speckit-implement`, **built in two slots** (see build order) |
@@ -26,11 +26,13 @@ the project constitution at [`.specify/memory/constitution.md`](../../.specify/m
 Status legend: **Not started** → **Drafted** (spec.md written) → **Clarified** → **Planned**
 (plan.md) → **Tasked** (tasks.md) → **In progress** → **Done**.
 
-**All five specs are Tasked as of 2026-07-22** — every one has `plan.md`, `research.md`,
-`data-model.md`, `contracts/`, `quickstart.md`, and `tasks.md`. Nothing is built yet; the next step is
-`/speckit-implement`, following the build order below. The pre-plan deep review
-(`REVIEW-findings.md`) and its resolution log (`findings-FIXES.md`) are **fully closed** — treat both
-as historical record, not open work.
+**All five specs were Tasked as of 2026-07-22** — every one has `plan.md`, `research.md`,
+`data-model.md`, `contracts/`, `quickstart.md`, and `tasks.md`. **001 is now Done** (implemented
+2026-07-23, following the build order below) — see its own `tasks.md` (T035/T036) for the
+"Tasked" → "Done" status fix and final validation. *(000's own `tasks.md` T032 separately notes
+its status cell here is stale too — that fix belongs to 000's session, not this one.)* The
+pre-plan deep review (`REVIEW-findings.md`) and its resolution log (`findings-FIXES.md`) are
+**fully closed** — treat both as historical record, not open work.
 
 **004 is not split into two directories.** Its spec.md floats a possible `004-rubric-core` /
 `004a-delivery-harvest-comparison` split; that was deliberately **not executed** (`findings-FIXES.md`,

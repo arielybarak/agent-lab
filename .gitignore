@@ -10,6 +10,10 @@ __pycache__/
 # Per-repo Claude Code setups (generated output, installed into target repos)
 meta-env-setup/claude-setups/
 
+# Generated courses (runtime staging — course-factory/DESIGN.md; moved out of the repo by the
+# author after delivery, never tracked here)
+course-factory/courses/
+
 # Never commit personal documents or real secrets
 *_CV.pdf
 .env

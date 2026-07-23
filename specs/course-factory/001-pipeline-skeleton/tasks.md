@@ -35,13 +35,13 @@ repo-relative from `agent-lab/`.
 
 **Purpose**: Directory skeleton + test harness so every later task has a home.
 
-- [ ] T001 Create the factory engine skeleton: `course-factory/.claude/commands/`,
+- [X] T001 Create the factory engine skeleton: `course-factory/.claude/commands/`,
   `course-factory/.claude/agents/`, `course-factory/.claude/skills/`, `course-factory/tools/`,
   `course-factory/tests/fixtures/` — per plan.md Project Structure. Confirm it is **separate** from
   any `course-template/.claude/` (Structural Constraints). Note: `course-factory/insights/` already
   exists (empty, start-empty per Principle XII) so intake's FR-025 read path is concrete; 001 only
   reads it, 004 writes it.
-- [ ] T002 [P] Configure `pytest` discovery for `course-factory/tests/` (a minimal `conftest.py`;
+- [X] T002 [P] Configure `pytest` discovery for `course-factory/tests/` (a minimal `conftest.py`;
   **no new dependencies** — stdlib + pytest only, per repo convention).
 
 ---
@@ -52,13 +52,13 @@ repo-relative from `agent-lab/`.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T003 Build the minimal frozen-template fixture in `course-factory/tests/fixtures/template-min/`
+- [X] T003 Build the minimal frozen-template fixture in `course-factory/tests/fixtures/template-min/`
   (a `VERSION` semver, a `manifest`, a `default` profile, and 2–3 topic-neutral `.claude/` files) —
   the spec-000 stand-in that unblocks US1 without the real template (research R6,
   contracts/course-folder.md).
-- [ ] T004 [P] Create sample spec fixtures in `course-factory/tests/fixtures/specs/`:
+- [X] T004 [P] Create sample spec fixtures in `course-factory/tests/fixtures/specs/`:
   `well-formed.md`, `missing-running-example.md`, `malformed.md` (quickstart Prerequisites).
-- [ ] T005 Implement the state core in `course-factory/tools/progress.py`: parse + serialize the
+- [X] T005 Implement the state core in `course-factory/tools/progress.py`: parse + serialize the
   single fenced ` ```json ` block in `BUILD_PROGRESS.md` and validate its shape against
   contracts/build-progress-schema.md (**no** transition logic yet — that is US2). This is the shared
   read/write foundation US1 (init) and US2/US3 (transitions) both call.
@@ -80,37 +80,37 @@ partial folder; against an unversioned template → halt. Source template byte-f
 
 ### Tests for User Story 1 ⚠️ (write first, must FAIL)
 
-- [ ] T006 [P] [US1] `course-factory/tests/test_instantiate.py`: brief-completeness backstop (a
+- [X] T006 [P] [US1] `course-factory/tests/test_instantiate.py`: brief-completeness backstop (a
   brief missing a required field → `instantiate.py` **halts**, SC-001/002); overlay applied for the
   selected profile + enabled modules present + `template_version` stamped + three stubs created
   (SC-002); source `template-min/` **byte-for-byte unchanged** via checksum diff (SC-003).
-- [ ] T007 [P] [US1] Add to `test_instantiate.py`: absent-or-unversioned template → **halt**, write
+- [X] T007 [P] [US1] Add to `test_instantiate.py`: absent-or-unversioned template → **halt**, write
   **no** partial folder (FR-001, SC-009); course-name collision → suffixed, never overwritten (spec
   Assumptions).
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Implement `course-factory/tools/instantiate.py`: (1) validate brief completeness and
+- [X] T008 [US1] Implement `course-factory/tools/instantiate.py`: (1) validate brief completeness and
   halt on any missing required field (running example, profile, modules, topic/scope, audience,
   source pointers) — the mechanical anti-fabrication backstop (FR-003, SC-001/002); (2) resolve
   course name/slug + collision suffix; (3) **copy-never-mutate** `course-template/` → `courses/<name>/`
   overlaying the selected profile + enabled modules; (4) stamp `template_version`; (5) init
   `BUILD_PROGRESS.md` at syllabus-start via `progress.py`; (6) create `SOURCES.md`, `FEEDBACK.md`,
   `DIFFS.md` stubs (FR-006/007/008).
-- [ ] T009 [US1] Add the absent/unversioned-template guard to `instantiate.py`: halt with a clear
+- [X] T009 [US1] Add the absent/unversioned-template guard to `instantiate.py`: halt with a clear
   reason before any write (FR-001, SC-009).
-- [ ] T010 [US1] Author `course-factory/.claude/commands/course-intake.md`: read `COURSE_SPEC.md` and
+- [X] T010 [US1] Author `course-factory/.claude/commands/course-intake.md`: read `COURSE_SPEC.md` and
   the `insights/` digest (empty/missing is valid — FR-025), run the upfront clarify interview, author
   `COURSE_BRIEF.md` (topic/scope, audience + prior knowledge, running example, source pointers),
   select exactly one archetype profile (default when the spec names none — FR-005/025) and the
   enabled/disabled module set (FR-002/004/005).
-- [ ] T011 [P] [US1] Author `course-factory/.claude/agents/intake-interviewer.md`: the upfront
+- [X] T011 [P] [US1] Author `course-factory/.claude/agents/intake-interviewer.md`: the upfront
   clarify discipline + anti-fabrication rule — surface any missing required field as a **blocking
   question**, never invent a default (FR-002/003, SC-001).
-- [ ] T012 [US1] Author `course-factory/.claude/commands/course-instantiate.md`: a thin command that
+- [X] T012 [US1] Author `course-factory/.claude/commands/course-instantiate.md`: a thin command that
   hands the authored brief + selected template to `instantiate.py` and reports the created folder
   (FR-006).
-- [ ] T013 [US1] Validate US1 end-to-end per `quickstart.md` § US1 (well-formed → folder;
+- [X] T013 [US1] Validate US1 end-to-end per `quickstart.md` § US1 (well-formed → folder;
   missing-running-example → blocked; malformed → halt; unversioned template → halt).
 
 **Checkpoint**: A rough spec becomes a correct, version-stamped, overlay-applied course folder — the
@@ -132,34 +132,34 @@ every required artifact plus a `COURSE_REPORT.md` scorecard.
 
 ### Tests for User Story 2 ⚠️ (write first, must FAIL)
 
-- [ ] T014 [P] [US2] `course-factory/tests/test_progress.py` (transitions): the transition function
+- [X] T014 [P] [US2] `course-factory/tests/test_progress.py` (transitions): the transition function
   **rejects** an advance with no recorded gate pass and any phase skip (SC-006); records `cleared_at`;
   each phase carries its **matched** `gate_type` (SC-007); movement is forward-only, never re-opening a
   passed phase (SC-010).
-- [ ] T015 [P] [US2] `course-factory/tests/test_phase_walk.py`: feed scripted stub gate results
+- [X] T015 [P] [US2] `course-factory/tests/test_phase_walk.py`: feed scripted stub gate results
   (`pass`, `loop→loop→pass`, cap-hit `needs-user`, `failed`) into the transition function; assert the
   ordered walk syllabus→skeletons→lessons→deliver and the **full** delivery artifact set at `done`
   (SC-007/008) — no agent in the loop (research R1).
-- [ ] T016 [P] [US2] `course-factory/tests/test_diffs.py`: a change to an already-gated artifact is
+- [X] T016 [P] [US2] `course-factory/tests/test_diffs.py`: a change to an already-gated artifact is
   appended to `DIFFS.md` (append-only), and `current_phase` never moves backward (FR-023/027, SC-010).
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Implement the **transition function** in `course-factory/tools/progress.py`:
+- [X] T017 [US2] Implement the **transition function** in `course-factory/tools/progress.py`:
   `(state, gate_result) → next legal state`; reject advance-without-gate-pass + phase-skip; stamp
   `gate_status=cleared` + `cleared_at`; encode the phase→gate_type map (FR-009/010/011, SC-006/007).
-- [ ] T018 [US2] Implement round-cap accounting in `progress.py`: increment `active_loop.round`, and
+- [X] T018 [US2] Implement round-cap accounting in `progress.py`: increment `active_loop.round`, and
   at 3 convert a `loop` result to `needs-user` for the accept-or-comment decision (exactly one extra
   pass, then accepted regardless — FR-012).
-- [ ] T019 [P] [US2] Implement `course-factory/tools/diffs.py`: the append-only `DIFFS.md` writer per
+- [X] T019 [P] [US2] Implement `course-factory/tools/diffs.py`: the append-only `DIFFS.md` writer per
   contracts/diffs-ledger.md (FR-027).
-- [ ] T020 [P] [US2] Implement `course-factory/tools/deliver_check.py`: the required-artifact-presence
+- [X] T020 [P] [US2] Implement `course-factory/tools/deliver_check.py`: the required-artifact-presence
   check per contracts/course-folder.md; delivery clears on `COURSE_REPORT.md` **presence**, any
   verdict (FR-020, SC-008).
-- [ ] T021 [US2] Implement the stub handlers in `course-factory/.claude/skills/phase-stubs/SKILL.md`:
+- [X] T021 [US2] Implement the stub handlers in `course-factory/.claude/skills/phase-stubs/SKILL.md`:
   syllabus/skeleton/lesson/deliver stubs that write a placeholder artifact + return a scripted gate
   result, honoring the input envelope + gate-result contract (contracts/phase-seam.md, research R4).
-- [ ] T022 [US2] Author the orchestrator `course-factory/.claude/commands/course-build.md`
+- [X] T022 [US2] Author the orchestrator `course-factory/.claude/commands/course-build.md`
   (start-or-continue `<name>`): read state → invoke the current phase's handler (stub) → call the
   `progress.py` transition function → persist before the next unit → advance or **park**; enforce the
   gate mapping including the **blocking post-skeleton user scan** (FR-024, SC-011) and the delivery
@@ -170,9 +170,9 @@ every required artifact plus a `COURSE_REPORT.md` scorecard.
   two ask-moments and the scheduled gates interrupt (FR-014). Append gate-event author feedback to
   `FEEDBACK.md` (FR-026); apply any change to a gated artifact as a forward diff via `diffs.py`
   (FR-023).
-- [ ] T023 [P] [US2] Author `course-factory/.claude/commands/course-status.md`: a read-only render of
+- [X] T023 [P] [US2] Author `course-factory/.claude/commands/course-status.md`: a read-only render of
   `BUILD_PROGRESS.md` (no state change).
-- [ ] T024 [US2] Validate US2 end-to-end per `quickstart.md` § US2 (ordered phases, matched
+- [X] T024 [US2] Validate US2 end-to-end per `quickstart.md` § US2 (ordered phases, matched
   reviewers, full delivery set incl. `COURSE_REPORT.md`, blocking post-skeleton scan honored).
 
 **Checkpoint**: An instantiated course walks to delivery through recorded, matched gates — the
@@ -194,31 +194,31 @@ refused; a corrupt state file halts.
 
 ### Tests for User Story 3 ⚠️ (write first, must FAIL)
 
-- [ ] T025 [P] [US3] Add to `test_progress.py` (resume): resume at the recorded phase + unfinished
+- [X] T025 [P] [US3] Add to `test_progress.py` (resume): resume at the recorded phase + unfinished
   lessons, repeating **0** completed units (SC-004); resume point derived from the folder **alone**
   (SC-005); several courses in staging resolve to exactly the one named (FR-019).
-- [ ] T026 [P] [US3] Add to `test_progress.py` (lock): a live-holder concurrent advance is **blocked
+- [X] T026 [P] [US3] Add to `test_progress.py` (lock): a live-holder concurrent advance is **blocked
   and surfaced** (SC-012); a **stale** lock is reclaimable with the reclaim recorded (FR-028).
-- [ ] T027 [P] [US3] Add to `test_progress.py` (integrity): missing / corrupt / internally
+- [X] T027 [P] [US3] Add to `test_progress.py` (integrity): missing / corrupt / internally
   inconsistent state → **halt + report** (SC-009); `template_version` drift on resume → halt (SC-009).
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Implement resume in `progress.py`: read state, drift-check `template_version`,
+- [X] T028 [US3] Implement resume in `progress.py`: read state, drift-check `template_version`,
   continue at `current_phase` + the unfinished `lessons[]`, and perform **no** unit the file records as
   done (FR-017/018, SC-004/005).
-- [ ] T029 [US3] Implement the lock marker in `progress.py`: `/course-build` **mints a per-invocation
+- [X] T029 [US3] Implement the lock marker in `progress.py`: `/course-build` **mints a per-invocation
   `holder` token** (short random value — no stable Claude session id exists) and passes it in;
   `progress.py` acquires on entry; refuses a live-holder conflict and surfaces it; refreshes on each
   persisted unit; clears on park/clean exit; reclaims a stale lock and records the reclaim (FR-028,
   SC-012). Liveness/stale windows are configurable constants with sensible defaults; the token need
   only be unique per active invocation (contracts/build-progress-schema.md § lock.holder,
   data-model rule 8).
-- [ ] T030 [US3] Implement integrity validation in `progress.py`: detect missing/corrupt/inconsistent
+- [X] T030 [US3] Implement integrity validation in `progress.py`: detect missing/corrupt/inconsistent
   state + version drift and **halt + report** rather than guess (FR-022, SC-009).
-- [ ] T031 [US3] Wire multi-course isolation into `course-build.md`: `/course-build <name>` acts on
+- [X] T031 [US3] Wire multi-course isolation into `course-build.md`: `/course-build <name>` acts on
   exactly one named course's `BUILD_PROGRESS.md`, independent of other staged courses (FR-019).
-- [ ] T032 [US3] Validate US3 end-to-end per `quickstart.md` § US3 (resume without repeat, lock
+- [X] T032 [US3] Validate US3 end-to-end per `quickstart.md` § US3 (resume without repeat, lock
   refusal + stale reclaim, integrity halt, version-drift halt).
 
 **Checkpoint**: Builds pause and resume across sessions from disk alone, with concurrency + integrity
@@ -228,13 +228,13 @@ guarantees — the durability property that makes the spine usable over long mul
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T033 [P] Write `course-factory/tools/README.md`: what each tool guarantees and which command
+- [X] T033 [P] Write `course-factory/tools/README.md`: what each tool guarantees and which command
   calls it (mirrors `meta-env-setup/tools/README.md` shape).
-- [ ] T034 [P] Add a `.gitignore` entry for `course-factory/courses/` (generated courses are runtime
+- [X] T034 [P] Add a `.gitignore` entry for `course-factory/courses/` (generated courses are runtime
   staging, not tracked — DESIGN.md).
-- [ ] T035 [P] Update `specs/course-factory/README.md` status for 001 from "Clarified" → "Planned →
+- [X] T035 [P] Update `specs/course-factory/README.md` status for 001 from "Clarified" → "Planned →
   Tasked" (the index is the cold-session entry point).
-- [ ] T036 Run the full `pytest` suite over `course-factory/tests/` — all green — and walk
+- [X] T036 Run the full `pytest` suite over `course-factory/tests/` — all green — and walk
   `quickstart.md`'s four SC families end-to-end (anti-fabrication+integrity; overlay+copy;
   gates+delivery; resume+lock+forward-diff).
 
@@ -316,3 +316,38 @@ be built in separate sessions (README decomposition premise).
   SC-011 → T022; SC-012 → T026/T029.
 - Verify tests fail before implementing; commit after each task or logical group.
 - Stdlib only, pytest only — no new dependencies (repo convention).
+
+---
+
+## Phase 7: Convergence
+
+Appended by `/speckit-converge` (2026-07-23) after assessing the built code against spec/plan/tasks.
+Each task traces to the gap that produced it.
+
+- [X] T037 Seed `lessons[]` at the skeleton phase so a live walk reaches delivery with a real lesson
+  set per US2/AC3 + FR-015 (missing). Today nothing populates it: `progress.py` only upserts via
+  `set_lesson_status`, `phase-stubs/SKILL.md` writes `skeletons/<lesson-id>.md` "per planned lesson"
+  with no defined source for that list, and `course-build.md`'s lessons loop iterates an empty
+  `lessons[]` — so `deliver_check.py` reports `lessons[] (no lessons recorded)` and SC-008 fails.
+  `test_phase_walk.py` masks this by hand-calling `set_lesson_status`. Define where the planned lesson
+  ids come from (the syllabus artifact) in `contracts/phase-seam.md`'s terms, have the skeleton stub
+  seed each at `not-started` via `progress.py`, document it in `phase-stubs/SKILL.md` +
+  `course-build.md`, and add a `test_phase_walk.py` case that drives the walk **without** hand-seeding.
+- [X] T038 Append the round-cap accept-or-comment feedback to `FEEDBACK.md` in
+  `course-factory/.claude/commands/course-build.md` per FR-026 / Constitution XII (partial). The
+  syllabus revision loop and the post-skeleton change request already append; the round-cap "comment"
+  branch (skeletons step 2, and the lessons phase that refers back to it) does not — yet it is the
+  first case FR-026 names. Append the author's comment before calling `extend-round-cap`.
+- [X] T039 Add a `syllabus_subphase` writer + validation to `course-factory/tools/progress.py` per
+  FR-015 / FR-022 / contracts/build-progress-schema.md rules 1–2 (missing). 002 owns the field but
+  rule 1 forbids hand-editing the JSON block and no `set_syllabus_subphase()` (module or CLI) exists,
+  unlike `set_lesson_status` for 003's field; `validate_state()` also never checks its enum or the
+  "null unless `current_phase == syllabus`" rule, so an inconsistent value passes the integrity gate.
+  Add the setter, the CLI subcommand, the enum + null-unless-syllabus validation, and tests.
+- [X] T040 Make the lock refresh reachable per FR-028 / data-model rule 8 / T029 (partial).
+  `refresh_lock()` exists and is unit-tested but has no CLI subcommand, and no mutating subcommand
+  (`transition`, `set-lesson-status`, …) refreshes `last_progress_at` — so a long live build can go
+  stale while actually progressing. Add a `lock-refresh <course_dir> --holder <token>` subcommand (or
+  refresh inside the persisted-unit subcommands), and fix `course-build.md`: step 1's `lock-acquire`
+  must capture the token and step 3's refresh must pass `--holder`, otherwise following the command
+  literally mints a new token each refresh.
