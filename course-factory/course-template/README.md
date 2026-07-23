@@ -35,6 +35,29 @@ profiles/                the profile mechanism + the shipped profiles
 > from the factory's own build `.claude/` that runs the generation pipeline. The two are never
 > conflated or cross-edited.
 
+## What gets copied
+
+The copy step (spec 001) must not have to *guess* which files land in a generated course. Two
+classes of file live at this root:
+
+- **Tier pieces** — everything under `.claude/`, the selected `profiles/` entry, and any enabled
+  `modules` pieces. These are the course template; 001 copies them (honoring the profile + module
+  selection in `manifest.yaml`).
+- **Template-root metadata** — `VERSION`, `manifest.yaml`, `CLASSIFICATION.md`,
+  `neutrality-terms.txt`, and this `README.md`. **None is copied into a course.** They describe or
+  maintain the *template*: 001 *reads* `VERSION` (to record the drift stamp) and `manifest.yaml`
+  (the tier map) at build time but copies neither; the other three exist only for the distillation
+  audit and re-distillation. A generated course gets its own equivalent docs via 001's overlay, not
+  by inheriting these.
+
+This disposition is declared machine-readably in `manifest.yaml`'s `metadata:` block (each entry
+`copied: false`), so 001 reads it rather than inferring it (FR-018). Metadata files are a **distinct
+class** from the three tiers — they are not tier pieces, so the "a piece is in exactly one tier"
+manifest invariant is unaffected. **This `README.md` is itself ratified as one such declared
+template-root metadata file** (it was added during the distillation to document these rules for the
+copy consumer); it stays here rather than folding into the manifest, since prose belongs in a README
+and the manifest carries only the machine-readable declaration.
+
 ## `VERSION` and drift
 
 `VERSION` holds one `MAJOR.MINOR.PATCH` value that names this distillation snapshot, and it is

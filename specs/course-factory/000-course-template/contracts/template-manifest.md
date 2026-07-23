@@ -47,6 +47,18 @@ modules:                    # opt-in, each independently toggleable (FR-012)
   socratic:
     pieces: [ ... ]
     depends_on: []
+
+metadata:                   # template-root files — a DISTINCT class from the tiers, none copied into a course
+  - path: VERSION           # 001 reads the stamp (drift-check) but does not copy the file
+    copied: false
+  - path: manifest.yaml     # the tier map 001 reads; not course content
+    copied: false
+  - path: CLASSIFICATION.md
+    copied: false
+  - path: neutrality-terms.txt
+    copied: false
+  - path: README.md
+    copied: false
 ```
 
 ## Invariants 001 relies on
@@ -59,6 +71,11 @@ modules:                    # opt-in, each independently toggleable (FR-012)
 4. **`modules.*.depends_on` toward core is empty** — 001 may include/exclude any module without
    breaking the core (FR-012/SC-004).
 5. **Core is never listed under `modules` or `profiles`** — a piece is in exactly one tier.
+6. **`metadata` files are a distinct class, not tier pieces** — the template-root files (`VERSION`,
+   `manifest.yaml`, `CLASSIFICATION.md`, `neutrality-terms.txt`, `README.md`) describe/maintain the
+   template and are **never copied into a generated course** (`copied: false`). Because they are not
+   core/profile/module pieces, they leave invariant 5 intact. 001 reads `VERSION` and `manifest.yaml`
+   at build time but copies neither (FR-018 — the disposition is declared, not inferred).
 
 ## Out of scope for this contract
 

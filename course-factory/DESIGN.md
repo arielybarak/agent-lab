@@ -196,7 +196,7 @@ scan** after skeletons, **rubric-only** after lessons.
 | Path | Purpose |
 | :--- | :--- |
 | `.claude/` | The **factory's own** environment — pipeline commands + build agents (scaffold, draft, grade). Runs when *we* build a course. |
-| `course-template/` | The **frozen** output-course skeleton: folder layout for phases/lessons **+ its generic `.claude/`**. Copied, never mutated. **Tiered:** mandatory core (syllabus, lesson arc, rubric, `/improve-course`, `/new-lesson`, `/course-report`) + optional modules (katas, diagrams, Socratic, pattern-catalog, *deferred:* per-artifact HTML/slide renderer, inline MCQ checkpoints). |
+| `course-template/` | The **frozen** output-course skeleton: folder layout for phases/lessons **+ its generic `.claude/`**. Copied, never mutated. **Built — `VERSION` 1.0.0** (spec 000). **Three-tiered** (Principle IX): a mandatory **core** (backward-design backbone, lesson arc, rubric, `/improve-course`, `/new-lesson`, `/course-report`) + named **archetype profiles** over that one core (MVP ships `default`; PBL/CBL·CBE/mastery·guided-inquiry are later increments) + opt-in **optional modules** (katas, diagrams, Socratic, pattern-catalog, *deferred:* per-artifact HTML/slide renderer, inline MCQ checkpoints). |
 | `courses/` | **Staging area where generated courses land** — one subfolder per course (`courses/<name>/`), each holding the content + `COURSE_BRIEF.md` + `SOURCES.md` + `BUILD_PROGRESS.md` (pipeline state) + a **`FEEDBACK.md`** (empty template; gathers critiques / things-to-fix for *that* course) + a **`COURSE_REPORT.md`** (the final graded scorecard from `course-evaluator`) + its `.claude` residue. After delivery the user moves the course out to its own home. |
 | `templates/` | The **course-spec template** (`COURSE_SPEC.template.md`, what the user fills in — initial draft exists) + syllabus/lesson templates. |
 | `insights/` | Distilled **lessons learned** across courses — anti-fabrication, the running-example backbone, kata design, estimation method. **Starts empty** — no pre-existing corpus is seeded from the reference course; it only accumulates from this factory's own courses going forward. **Write rule** (two ways, both **user-invoked only** — settled 2026-07-08, no automatic/scheduled trigger): *user-triggered capture* (when an insight surfaces, the user explicitly tells an agent to log it here) + a *`setup-retro`-style bulk harvest* that pumps a course's `FEEDBACK.md` up into here on demand. **Read rule:** intake (step 0), syllabus compose (2b), and skeleton/lesson drafting all load this digest; an empty digest is valid input. Knowledge, not tooling. |
@@ -285,11 +285,13 @@ Full rationale for each: `docs/FUTURE_IDEAS.md` § Course-factory.
 ## Build roadmap
 
 1. **Distill `course-template/`** from `System_Design_SelfLearn/.claude` — extract the
-   topic-neutral core (syllabus, lesson arc, rubric, `/improve-course`) into the frozen template;
-   demote SD-specific pieces (`design-pattern-catalog`, `architecture-diagrams`, katas) to
-   **optional modules**. *This is task #1 — the template does not exist yet.* **SD is an
-   unvalidated idea-source, not a proven reference (see below): filter it with critical thinking and
-   pair it with external research; never inherit by authority.** Speced as `specs/course-factory/000-course-template`.
+   topic-neutral core (backward-design backbone, lesson arc, rubric, `/improve-course`) into the
+   frozen template; demote SD-specific pieces (`design-pattern-catalog`, `architecture-diagrams`,
+   katas) to **optional modules**, and configure the core through **archetype profiles** (default at
+   MVP). ✅ **Built — the template exists at `course-factory/course-template/`, `VERSION` 1.0.0.**
+   **SD is an unvalidated idea-source, not a proven reference (see below): filter it with critical
+   thinking and pair it with external research; never inherit by authority.** Speced as
+   `specs/course-factory/000-course-template`.
 2. **Stand up the factory's own `.claude/`** — the pipeline commands + build agents that run the
    phased loop. **Owned by spec 001** as its `/speckit-plan` + `/speckit-tasks` implementation
    deliverable (see `specs/course-factory/001-pipeline-skeleton/spec.md` Assumptions) — not a

@@ -6,6 +6,12 @@ verdict, its rationale, and its provenance are the *same* record.
 - **Reference**: `$COURSE_FACTORY_REFERENCE_DIR` (default `/home/barak/System_Design_SelfLearn/`) —
   read-only, and **unvalidated**: never delivered to or validated by a real learner. Nothing was
   carried into this template on the strength of its existing there.
+- **Distillation snapshot**: this ledger reflects the reference course at commit
+  **`5dd7056`** (`5dd705676f5dc1a5b49e8e34a5dfe4e19f4ca9ef`, dated 2026-07-05), distilled
+  **2026-07-23** into `VERSION` 1.0.0. Recording *which state* was read (not just the path) lets a
+  later re-distillation `git diff` the reference against this commit and re-filter only what
+  actually changed, rather than re-reading the whole `.claude/` blind (Edge Case: "the reference
+  course changes after distillation").
 - **Research**: `specs/course-factory/000-course-template/research-digest.md` — cited as
   `digest §N`. The distillation halts without it.
 - **Rationale format** follows the `mentor-research` discipline: a tiered reliability call

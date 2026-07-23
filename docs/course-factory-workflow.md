@@ -31,13 +31,13 @@ that touched.
 ## Current status (as of 2026-07-23)
 
 All five specs were **Tasked** as of 2026-07-22 — each has `plan.md`, `research.md`,
-`data-model.md`, `contracts/`, `quickstart.md`, and `tasks.md`. **001 is now Done** (implemented
-2026-07-23); see `specs/course-factory/README.md` for the authoritative per-spec status (000's own
-`tasks.md` T032 separately flags that its row here/there is stale, unrelated to this update).
+`data-model.md`, `contracts/`, `quickstart.md`, and `tasks.md`. **000 and 001 are now Done**
+(both implemented 2026-07-23); see `specs/course-factory/README.md` for the authoritative per-spec
+status.
 
 | Spec | Status | Next command |
 | :--- | :--- | :--- |
-| 000-course-template | Tasked (see note above) | `/speckit-implement` |
+| 000-course-template | **Done** | — (downstream specs may copy the frozen template) |
 | 001-pipeline-skeleton | **Done** | — (002 may now build against its seam) |
 | 002-syllabus | Tasked | `/speckit-implement` |
 | 003-lessons | Tasked | `/speckit-implement` |

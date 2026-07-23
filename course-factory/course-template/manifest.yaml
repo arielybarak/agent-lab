@@ -7,6 +7,8 @@
 #   3. Every path here exists on disk and has a matching CLASSIFICATION.md target.
 #   4. Every `modules.*.depends_on` toward core is empty — any module may be toggled off.
 #   5. A piece appears in exactly one tier; core is never listed under profiles or modules.
+#   6. `metadata` files are NOT tier pieces — they describe/maintain the template and are never
+#      copied into a generated course, so they do not violate invariant 5.
 
 version: "1.0.0"
 
@@ -53,3 +55,22 @@ modules:
       - .claude/agents/socratic-mentor.md
       - .claude/commands/teach.md
     depends_on: []
+
+# Template-root metadata — a distinct class from the core/profile/module tiers above (invariant 6).
+# These files describe or maintain the template itself; NONE is copied into a generated course.
+# 001 *reads* two of them at build time (VERSION for the drift stamp, manifest.yaml for the tier
+# map) and records the version, but copies neither as course content; the other three exist only for
+# the distillation audit and re-distillation. Because they are not tier pieces, they leave invariant
+# 5 ("a piece is in exactly one tier") intact. The rule is restated for the copy consumer in
+# README.md § "What gets copied".
+metadata:
+  - path: VERSION
+    copied: false            # 001 reads the stamp and records it for the drift-check; the file is not course content
+  - path: manifest.yaml
+    copied: false            # the build-time tier map 001 reads; not course content
+  - path: CLASSIFICATION.md
+    copied: false            # distillation audit ledger — provenance of the template, not the course
+  - path: neutrality-terms.txt
+    copied: false            # the neutrality gate's denylist — used for re-distillation, not the course
+  - path: README.md
+    copied: false            # documents the template; a generated course gets its own docs via 001's overlay
