@@ -40,6 +40,11 @@ GATE_TYPES = {
 }
 GATE_STATUSES = {"pending", "in-progress", "cleared"}
 LESSON_STATUSES = {"not-started", "in-progress", "passed", "accepted-at-cap"}
+# The two statuses that mean a lesson's refine cycle is finished. Delivery counts a course complete
+# only when every lesson is one of these (deliver_check imports this set, keeping one source of
+# truth), and settle_lesson() records only these — an in-flight status has no business ending a
+# lesson's cycle.
+TERMINAL_LESSON_STATUSES = {"passed", "accepted-at-cap"}
 GATE_RESULTS = {"pass", "needs-user", "loop", "failed"}
 
 # 002's checkpointable sub-phases (002 FR-018) — already fixed by this contract
@@ -406,6 +411,45 @@ def set_lesson_status(
     return state
 
 
+def settle_lesson(state: dict[str, Any], lesson_id: str, status: str) -> dict[str, Any]:
+    """Atomically settle a lesson's refine loop **and** record its terminal status in one
+    read-mutate-write (FR-016/017, SC-004).
+
+    The lessons phase used to settle a lesson in two separate persisted calls — clear_active_loop()
+    (or accept_round_cap()) to close the refine loop, then set_lesson_status() to record the
+    terminal status. A crash between them left `active_loop` cleared but the lesson still
+    `not-started`/`in-progress`; on resume nothing showed the cycle had completed, so the whole
+    refine cycle was redone from round 1 — breaking SC-004's "0 completed units repeated". Folding
+    both mutations into one persisted step closes that window: either the lesson is
+    settled-and-recorded, or neither happened.
+
+    Records only a terminal status (`passed` / `accepted-at-cap`). Clears any `active_loop` for the
+    current phase — whether the rubric passed early under the cap or the author settled it at the
+    cap — and, like clear_active_loop()/accept_round_cap(), refuses a loop tagged for a different
+    phase. Never advances `current_phase`: the lessons phase clears only when the driver calls
+    transition(state, "pass") after *every* lesson is terminal (FR-012/015)."""
+    if status not in TERMINAL_LESSON_STATUSES:
+        raise TransitionError(
+            f"settle_lesson records only a terminal status ({sorted(TERMINAL_LESSON_STATUSES)}), "
+            f"not {status!r}"
+        )
+    loop = state.get("active_loop")
+    if loop is not None and loop["phase"] != state["current_phase"]:
+        raise TransitionError(
+            f"active_loop is for phase {loop['phase']!r}, not the current phase "
+            f"{state['current_phase']!r}"
+        )
+    state = copy.deepcopy(state)
+    state["active_loop"] = None
+    for lesson in state["lessons"]:
+        if lesson["id"] == lesson_id:
+            lesson["status"] = status
+            break
+    else:
+        state["lessons"].append({"id": lesson_id, "status": status})
+    return state
+
+
 # --------------------------------------------------------------------------------------------
 # Syllabus lesson-set seeding — the link between the frozen SYLLABUS.md and lessons[]
 # --------------------------------------------------------------------------------------------
@@ -568,6 +612,14 @@ def main(argv: list[str] | None = None) -> int:
     p_lesson.add_argument("lesson_id")
     p_lesson.add_argument("status", choices=sorted(LESSON_STATUSES))
 
+    p_settle = sub.add_parser(
+        "settle-lesson",
+        help="atomically settle a lesson's refine loop and record its terminal status (one write)",
+    )
+    p_settle.add_argument("course_dir", type=Path)
+    p_settle.add_argument("lesson_id")
+    p_settle.add_argument("status", choices=sorted(TERMINAL_LESSON_STATUSES))
+
     p_seed = sub.add_parser("seed-lessons", help="seed lessons[] from a frozen SYLLABUS.md's lesson list")
     p_seed.add_argument("course_dir", type=Path)
     p_seed.add_argument("syllabus_path", type=Path)
@@ -621,6 +673,10 @@ def main(argv: list[str] | None = None) -> int:
         elif args.cmd == "set-lesson-status":
             state = read_state(path)
             state = set_lesson_status(state, args.lesson_id, args.status)
+            write_state(path, state)
+        elif args.cmd == "settle-lesson":
+            state = read_state(path)
+            state = settle_lesson(state, args.lesson_id, args.status)
             write_state(path, state)
         elif args.cmd == "seed-lessons":
             state = read_state(path)

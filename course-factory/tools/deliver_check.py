@@ -31,7 +31,9 @@ REQUIRED_FILES = [
     "COURSE_REPORT.md",
 ]
 
-TERMINAL_LESSON_STATUSES = {"passed", "accepted-at-cap"}
+# Canonical set lives in progress.py (settle_lesson() records only these) — import it rather than
+# re-declaring, so the "what counts as a finished lesson" rule can never drift between the two tools.
+TERMINAL_LESSON_STATUSES = progress.TERMINAL_LESSON_STATUSES
 
 
 def missing_artifacts(course_dir: Path, state: dict[str, Any]) -> list[str]:

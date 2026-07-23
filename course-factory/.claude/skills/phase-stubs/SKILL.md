@@ -69,11 +69,17 @@ mechanism without either one auto-advancing early.
   change request at the scan re-invokes the stub for a **fresh** round cap (`progress.ROUND_CAP`,
   FR-024).
 - **`lessons`** (`rubric`) — the stub works one lesson at a time (MVP is serial, `pool_width`=1 —
-  see `course-factory/DESIGN.md`). For **each** lesson: run its own round-cap cycle exactly like
-  skeletons above (`loop` → `clear-active-loop` on an early pass, or `accept`/`extend-round-cap`
-  at the cap), then record the lesson with `progress.py set-lesson-status <dir> <id> passed` (or
-  `accepted-at-cap`). Only once **every** lesson is terminal does `/course-build` itself call
-  `transition <dir> pass` to clear the phase — no single lesson's settle does that.
+  see `course-factory/DESIGN.md`). For **each** lesson: run its own round-cap cycle with
+  `progress.py transition <dir> loop` per round, then **settle it in one call** —
+  `progress.py settle-lesson <dir> <id> passed` (rubric passed under the cap) or
+  `progress.py settle-lesson <dir> <id> accepted-at-cap` (author accepted at the cap, or after the
+  single `extend-round-cap` pass). Unlike a skeleton, a lesson has a terminal status to record, so
+  its loop-clear and that status write are **one** atomic op — never `clear-active-loop`/
+  `accept-round-cap` (or a final `transition <dir> loop`) followed by a **separate**
+  `set-lesson-status`, which on a crash between the two would strand a cleared loop against a
+  not-yet-terminal lesson and redo the whole cycle from round 1 (FR-016/017, SC-004). Only once
+  **every** lesson is terminal does `/course-build` itself call `transition <dir> pass` to clear the
+  phase — no single lesson's settle does that.
 - **`deliver`** (`report-generated`) — the stub writes `COURSE_REPORT.md` with a placeholder
   verdict; `/course-build` then calls `transition <dir> pass` unconditionally once it exists —
   presence, not verdict, clears delivery (FR-011/021). **Note for 004:** this stub writes the file

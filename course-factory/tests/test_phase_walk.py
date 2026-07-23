@@ -230,6 +230,72 @@ def test_walk_reaches_delivery_with_lessons_seeded_from_the_syllabus(tmp_path):
     assert deliver_check.check_delivery(course_dir, state) is True
 
 
+def test_lessons_settle_atomically_via_settle_lesson_with_no_intermediate_gap():
+    """T042 (FR-016/017, SC-004): a lesson's refine-loop settle and its terminal-status write are
+    ONE persisted op (progress.settle_lesson), so a crash can never land between them. The pre-T042
+    path took two calls — clear_active_loop()/accept_round_cap() then set_lesson_status() — and a
+    crash in between stranded a cleared loop against a still-not-started lesson, so resume redid the
+    whole refine cycle from round 1 (violating SC-004's hard zero). Here each lesson reaches
+    terminal through the single combined op, exactly as /course-build now drives it."""
+    state = fresh_state()
+    state = progress.transition(state, "pass")  # syllabus -> skeletons
+    state = progress.transition(state, "pass")  # skeletons -> lessons
+    state = progress.seed_lessons(state, ["L01", "L02"])
+
+    # L01: rubric passes early, under the cap — one atomic settle, not clear+set as two writes.
+    state = progress.transition(state, "loop")
+    state = progress.settle_lesson(state, "L01", "passed")
+    assert state["active_loop"] is None
+    assert next(l["status"] for l in state["lessons"] if l["id"] == "L01") == "passed"
+
+    # L02: hits the cap, author accepts — same single atomic settle records accepted-at-cap.
+    for _ in range(progress.ROUND_CAP):
+        state = progress.transition(state, "loop")
+    state = progress.settle_lesson(state, "L02", "accepted-at-cap")
+    assert state["active_loop"] is None
+    assert all(l["status"] in ("passed", "accepted-at-cap") for l in state["lessons"])
+
+    # Every lesson terminal -> only the driver's own explicit pass clears the phase.
+    state = progress.transition(state, "pass")
+    assert state["current_phase"] == "deliver"
+
+
+def test_skeletons_phase_self_heals_an_empty_lessons_list_by_reseeding(tmp_path):
+    """T043 (FR-017 / Principle XI): a crash between the syllabus `transition ... pass` and the
+    follow-up `seed-lessons` lands resume at `skeletons` with an empty lessons[] but a frozen
+    SYLLABUS.md still on disk. Because seed_lessons is idempotent, the skeletons step re-seeds from
+    SYLLABUS.md and continues — no stall, no lost work. This exercises that exact resume point."""
+    syllabus_text = (
+        "# Syllabus (stub)\n\n```json\n"
+        '{"lessons": [{"id": "L01", "title": "one"}, {"id": "L02", "title": "two"}]}\n```\n'
+    )
+    course_dir = tmp_path / "intro-to-x"
+    course_dir.mkdir()
+
+    # Simulate the crash: advanced into skeletons, but lessons[] never got seeded.
+    state = fresh_state()
+    state = progress.transition(state, "pass")  # syllabus -> skeletons
+    assert state["current_phase"] == "skeletons" and state["lessons"] == []
+    (course_dir / "SYLLABUS.md").write_text(syllabus_text, encoding="utf-8")
+    progress.write_state(course_dir / "BUILD_PROGRESS.md", state)
+
+    # Resume + self-heal: re-seed from the frozen syllabus before drafting skeletons.
+    resumed = progress.resume(course_dir)
+    assert resumed["current_phase"] == "skeletons" and resumed["lessons"] == []  # the gap to heal
+    lesson_ids = progress.parse_syllabus_lessons((course_dir / "SYLLABUS.md").read_text())
+    state = progress.seed_lessons(resumed, lesson_ids)
+    assert [l["id"] for l in state["lessons"]] == ["L01", "L02"]
+    assert all(l["status"] == "not-started" for l in state["lessons"])
+
+    # The healed state carries forward to a real delivery — nothing was lost.
+    state = progress.transition(state, "pass")  # skeletons -> lessons
+    for lesson in list(state["lessons"]):
+        state = progress.settle_lesson(state, lesson["id"], "passed")
+    state = progress.transition(state, "pass")  # lessons -> deliver
+    state = progress.transition(state, "pass")  # deliver -> done
+    assert state["current_phase"] == "done"
+
+
 def test_delivery_check_fails_when_claude_dir_is_empty(tmp_path):
     """An empty .claude/ (vs. missing) must also fail — a degenerate directory isn't the frozen
     template residue FR-020 requires."""

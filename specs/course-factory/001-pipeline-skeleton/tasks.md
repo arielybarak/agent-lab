@@ -351,3 +351,58 @@ Each task traces to the gap that produced it.
   refresh inside the persisted-unit subcommands), and fix `course-build.md`: step 1's `lock-acquire`
   must capture the token and step 3's refresh must pass `--holder`, otherwise following the command
   literally mints a new token each refresh.
+
+---
+
+## Phase 8: Convergence
+
+Appended by `/speckit-converge` (2026-07-23), second pass — after Phase 7's T037–T040 were
+implemented. Each task traces to the gap that produced it.
+
+- [X] T041 Add a multi-course isolation test per FR-019 / US3 AC4 (missing). T025 promised "several
+  courses in staging resolve to exactly the one named" but no test exercises it — only single-course
+  scenarios exist in `test_progress.py`. Add a case: instantiate/init two courses under one
+  `courses_dir`, acquire a lock and transition one, and assert the other's `BUILD_PROGRESS.md`
+  (state, lock, phase) is byte-for-byte/field-for-field untouched.
+- [X] T042 Close the crash window between a lesson's round-cap settle and its terminal-status write
+  per FR-016/017 + SC-004 (partial). `course-build.md`'s lessons step calls `clear-active-loop` (or
+  `accept-round-cap`) and `set-lesson-status` as **two separate** `progress.py` invocations. A crash
+  between them leaves `active_loop` cleared but the lesson still `not-started`/`in-progress` — on
+  resume nothing shows the refine cycle completed, so it is redone from round 1, violating "0
+  completed units repeated" (SC-004's hard zero). Add a single atomic operation in `progress.py`
+  (function + CLI subcommand) that settles the active loop and records the lesson's terminal status
+  in one read-mutate-write; update `course-build.md`'s lessons step to call it instead of two calls;
+  add a `test_progress.py`/`test_phase_walk.py` case asserting a simulated crash between the two old
+  calls cannot occur (i.e. the combined op is the only path).
+- [X] T043 Make lessons[] seeding self-healing on resume per FR-017 / Principle XI (partial). Seeding
+  is a second `progress.py seed-lessons` call after the syllabus `transition ... pass` in
+  `course-build.md`'s syllabus step. A crash between the two leaves `current_phase == "skeletons"`
+  with an empty `lessons[]`; `seed-lessons` is idempotent and `SYLLABUS.md` still exists, so this is
+  recoverable, but the skeletons step has no defensive check and would stall instead of self-healing.
+  Add a guard at the top of `course-build.md`'s skeletons step: if `lessons[]` is empty on entry,
+  re-run `seed-lessons` against the already-frozen `SYLLABUS.md` before drafting; add a
+  `test_phase_walk.py` case simulating this exact resume point.
+
+---
+
+## Phase 9: Convergence
+
+Appended by `/speckit-converge` (2026-07-23), third pass — after Phase 8's T041–T043 were
+implemented. Each task traces to the gap that produced it.
+
+- [X] T044 Propagate T042's atomic lesson-settle into `phase-stubs/SKILL.md` per FR-016/017 + SC-004
+  (partial). T042 replaced the lessons-phase two-call settle (`clear-active-loop`/`accept-round-cap`
+  then a **separate** `set-lesson-status`) with the single atomic `settle-lesson`, and updated
+  `course-build.md`'s lessons step + its Boundaries accordingly — but `.claude/skills/phase-stubs/
+  SKILL.md`'s `lessons` bullet (the "The one nuance /course-build must get right per phase" list,
+  ~line 74) still narrates the superseded two-call sequence: "run its own round-cap cycle … (`loop`
+  → `clear-active-loop` on an early pass, or `accept`/`extend-round-cap` at the cap), then record
+  the lesson with `progress.py set-lesson-status <dir> <id> passed`". That is the exact crash window
+  T042 closed (a cleared loop stranded against a not-yet-terminal lesson → the cycle redone from
+  round 1 on resume, violating SC-004's hard zero), and SKILL.md is read by the driving session, so
+  the two docs now prescribe conflicting settles. Rewrite that `lessons` bullet to settle each
+  lesson with `progress.py settle-lesson <dir> <id> passed` (or `accepted-at-cap`) — loop-clear and
+  terminal-status in one write — matching `course-build.md`. Leave the `skeletons` bullet's
+  `clear-active-loop`/`accept-round-cap`/`extend-round-cap` wording unchanged: skeletons carry no
+  per-unit terminal status, so their settle is genuinely single-call already. No code or test change
+  — `settle_lesson` and its coverage already exist (T042); this closes the doc-propagation gap only.

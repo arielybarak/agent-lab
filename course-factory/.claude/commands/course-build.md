@@ -92,6 +92,18 @@ audit trail of when this invocation actually started holding the build; `lock-re
 
 ### `skeletons` (`agent-then-user`) — round-capped agent review, then a **blocking** scan (FR-024)
 
+0. **Self-heal the lesson set first (FR-017, Principle XI).** If `lessons[]` is empty on entry —
+   which happens only when a prior run crashed *between* the syllabus step's `transition ... pass`
+   and its follow-up `seed-lessons` — re-seed it from the already-frozen `SYLLABUS.md` before
+   drafting anything:
+   ```bash
+   python3 course-factory/tools/progress.py seed-lessons course-factory/courses/<name> \
+       course-factory/courses/<name>/SYLLABUS.md
+   ```
+   Seeding is idempotent (SC-004), so on the normal path — where the syllabus step already seeded —
+   this guard sees a non-empty `lessons[]` and is skipped. Never draft skeletons against an empty
+   `lessons[]`: that would stall the batch (nothing to draft one-per-lesson against) instead of
+   recovering the run that a still-present `SYLLABUS.md` makes fully recoverable.
 1. If the skeleton files don't exist yet, run the stub to draft the whole batch — one skeleton
    per lesson seeded in `lessons[]` (see the syllabus step above).
 2. Run the agent-review loop: `progress.py transition <dir> loop` once per round.
@@ -118,12 +130,25 @@ For each lesson in `lessons[]` not yet `passed` / `accepted-at-cap` (in order �
 already terminal, SC-004):
 
 1. Run the lesson stub for that lesson.
-2. Run its round-cap cycle exactly like the skeleton agent-review above (`loop` →
-   `clear-active-loop` on an early pass, or the accept/extend path at the cap — **including the
-   `FEEDBACK.md` append on a cap-`comment`**, FR-026) — **no mandatory user review** here (FR-011);
-   a rubric pass is enough.
-3. Record it: `progress.py set-lesson-status <dir> <lesson-id> passed` (or `accepted-at-cap` if it
-   only cleared via the cap extension).
+2. Run its round-cap cycle like the skeleton agent-review above — `progress.py transition <dir>
+   loop` once per round — but **settle it differently**. A lesson has a terminal status to record,
+   so its settle and that record are **one** call, never two:
+   ```bash
+   python3 course-factory/tools/progress.py settle-lesson <dir> <lesson-id> passed
+   ```
+   - **Rubric passes under the cap** → `settle-lesson <dir> <lesson-id> passed`.
+   - **Hits the cap** → present accept-or-comment (AskUserQuestion). **Accept** →
+     `settle-lesson <dir> <lesson-id> accepted-at-cap`. **Comment** → **append the author's comment
+     to `FEEDBACK.md`** (FR-026), then `extend-round-cap <dir>`, run **exactly one** more stub
+     round, then `settle-lesson <dir> <lesson-id> accepted-at-cap` (its outcome settles regardless —
+     FR-012).
+
+   Use `settle-lesson` here, **not** `clear-active-loop`/`accept-round-cap` followed by a separate
+   `set-lesson-status`, and **not** a final `transition <dir> loop` on the extend path: it clears
+   the refine loop **and** records the terminal status in a single read-mutate-write. Splitting them
+   opens a crash window (loop cleared, lesson still `not-started`) that on resume redoes the whole
+   cycle from round 1 — violating SC-004's hard zero (FR-016/017). There is **no mandatory user
+   review** for a lesson (FR-011); a rubric pass is enough.
 
 Once **every** lesson in `lessons[]` is terminal — not before — `progress.py transition <dir> pass`
 to clear the phase and advance to `deliver`. A single lesson settling its own round cap never does
@@ -174,9 +199,11 @@ automatically; nothing here needs a special "was I parked?" check).
 
 - **Never hand-edit `BUILD_PROGRESS.md`.** Every field change goes through `progress.py`.
 - **Never call `transition ... pass` for `skeletons` or `lessons` on a single unit's settle.** A
-  refine cycle settling (`clear-active-loop` / `accept-round-cap` / `extend-round-cap`) only ever
-  clears `active_loop` — the phase itself clears only when its own full condition is met (the
-  blocking scan for skeletons; every lesson terminal for lessons).
+  refine cycle settling — `clear-active-loop` / `accept-round-cap` / `extend-round-cap` for the
+  skeleton batch, or `settle-lesson` for a single lesson — only ever clears `active_loop` (and, for
+  a lesson, records that one lesson's terminal status in the same write); the phase itself clears
+  only when its own full condition is met (the blocking scan for skeletons; every lesson terminal
+  for lessons).
 - **Never ask an open-ended clarifying question mid-batch** (FR-014) — only the two ask-moments
   (intake, and post-research divergence — 002's) and the scheduled gates above interrupt.
 - **Never fabricate a gate result.** If a stub or a real handler hasn't actually produced/reviewed

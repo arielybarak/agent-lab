@@ -312,6 +312,76 @@ def test_set_lesson_status_rejects_unknown_status():
 
 
 # --------------------------------------------------------------------------------------------
+# Atomic lesson settle (T042, FR-016/017, SC-004) — one read-mutate-write collapses the loop
+# settle and the terminal-status write, closing the crash window between the two old calls.
+# --------------------------------------------------------------------------------------------
+
+def _at_lessons_phase():
+    state = fresh_state()
+    state = progress.transition(state, "pass")  # syllabus -> skeletons
+    state = progress.transition(state, "pass")  # skeletons -> lessons
+    return state
+
+
+def test_settle_lesson_clears_the_loop_and_records_terminal_status_in_one_step():
+    state = _at_lessons_phase()
+    state = progress.seed_lessons(state, ["L01"])
+    state = progress.transition(state, "loop")  # a refine round is open for this lesson
+    assert state["active_loop"] == {"phase": "lessons", "round": 1}
+
+    state = progress.settle_lesson(state, "L01", "passed")
+    # Both effects land together — there is no reachable state where the loop is cleared but the
+    # lesson is still non-terminal (the crash window T042 closes: pre-T042 these were two calls).
+    assert state["active_loop"] is None
+    assert {"id": "L01", "status": "passed"} in state["lessons"]
+
+
+def test_settle_lesson_settles_a_capped_loop_as_accepted_at_cap():
+    state = _at_lessons_phase()
+    state = progress.seed_lessons(state, ["L01"])
+    for _ in range(progress.ROUND_CAP):
+        state = progress.transition(state, "loop")
+    assert state["active_loop"]["round"] == progress.ROUND_CAP  # parked at the cap
+
+    state = progress.settle_lesson(state, "L01", "accepted-at-cap")
+    assert state["active_loop"] is None
+    assert {"id": "L01", "status": "accepted-at-cap"} in state["lessons"]
+
+
+def test_settle_lesson_upserts_a_lesson_not_yet_in_the_list():
+    state = _at_lessons_phase()
+    state = progress.settle_lesson(state, "L09", "passed")
+    assert {"id": "L09", "status": "passed"} in state["lessons"]
+
+
+def test_settle_lesson_rejects_a_non_terminal_status():
+    state = _at_lessons_phase()
+    state = progress.seed_lessons(state, ["L01"])
+    for bad in ("not-started", "in-progress", "kinda-done"):
+        with pytest.raises(progress.TransitionError):
+            progress.settle_lesson(state, "L01", bad)
+
+
+def test_settle_lesson_rejects_a_loop_belonging_to_another_phase():
+    state = _at_lessons_phase()
+    state = progress.seed_lessons(state, ["L01"])
+    state["active_loop"] = {"phase": "skeletons", "round": 1}  # mismatched on purpose
+    with pytest.raises(progress.TransitionError):
+        progress.settle_lesson(state, "L01", "passed")
+
+
+def test_settle_lesson_never_advances_the_phase_on_its_own():
+    """Settling one lesson clears its loop and records its status — it never clears the lessons
+    phase. That stays the driver's explicit transition(..., 'pass') once EVERY lesson is
+    terminal (FR-012/015)."""
+    state = _at_lessons_phase()
+    state = progress.seed_lessons(state, ["L01", "L02"])
+    state = progress.settle_lesson(state, "L01", "passed")
+    assert state["current_phase"] == "lessons"
+    assert state["phases"][2]["gate_status"] != "cleared"
+
+
+# --------------------------------------------------------------------------------------------
 # Resume (T028, SC-004/005)
 # --------------------------------------------------------------------------------------------
 
@@ -583,3 +653,58 @@ def test_cli_resume_reports_template_version_drift(tmp_path):
     course_dir.mkdir()
     progress.main(["init", str(course_dir), "intro-to-x", "1.0.0"])
     assert progress.main(["resume", str(course_dir), "--template-version", "9.9.9"]) == 1
+
+
+def test_cli_settle_lesson_persists_loop_clear_and_status_together(tmp_path):
+    course_dir = tmp_path / "intro-to-x"
+    course_dir.mkdir()
+    progress.main(["init", str(course_dir), "intro-to-x", "1.0.0"])
+    progress.main(["transition", str(course_dir), "pass"])  # -> skeletons
+    progress.main(["transition", str(course_dir), "pass"])  # -> lessons
+    progress.main(["transition", str(course_dir), "loop"])  # open a refine round
+    assert progress.main(["settle-lesson", str(course_dir), "L01", "passed"]) == 0
+    state = progress.read_state(course_dir / "BUILD_PROGRESS.md")
+    assert state["active_loop"] is None
+    assert {"id": "L01", "status": "passed"} in state["lessons"]
+
+
+def test_cli_settle_lesson_rejects_a_non_terminal_status(tmp_path):
+    course_dir = tmp_path / "intro-to-x"
+    course_dir.mkdir()
+    progress.main(["init", str(course_dir), "intro-to-x", "1.0.0"])
+    # argparse rejects a non-terminal status at the choices layer (exit 2), before any state write.
+    with pytest.raises(SystemExit):
+        progress.main(["settle-lesson", str(course_dir), "L01", "in-progress"])
+
+
+# --------------------------------------------------------------------------------------------
+# Multi-course isolation (T041, FR-019, US3/AC4) — acting on one course never touches another
+# --------------------------------------------------------------------------------------------
+
+def test_lock_and_transition_on_one_course_leave_a_sibling_byte_for_byte_untouched(tmp_path):
+    """FR-019 / US3-AC4: several courses share one staging dir and /course-build names exactly
+    one. Prove the isolation at the state layer — acquiring a lock and advancing course A must
+    never read-modify-write course B's BUILD_PROGRESS.md. Only single-course scenarios existed
+    before; this is the missing multi-course case T025 promised."""
+    courses_dir = tmp_path / "courses"
+    (courses_dir / "course-a").mkdir(parents=True)
+    (courses_dir / "course-b").mkdir(parents=True)
+
+    a_path = courses_dir / "course-a" / "BUILD_PROGRESS.md"
+    b_path = courses_dir / "course-b" / "BUILD_PROGRESS.md"
+    progress.write_state(a_path, progress.init_state("course-a", "1.0.0"))
+    progress.write_state(b_path, progress.init_state("course-b", "1.0.0"))
+    b_bytes_before = b_path.read_bytes()
+
+    # Do real work on A only: lock it and advance a phase, persisting each step to A's file.
+    state_a = progress.acquire_lock(progress.read_state(a_path), "cb-a")
+    progress.write_state(a_path, state_a)
+    state_a = progress.transition(progress.read_state(a_path), "pass")  # syllabus -> skeletons
+    progress.write_state(a_path, state_a)
+
+    # B is untouched — identical bytes, and its parsed state still the pristine init.
+    assert b_path.read_bytes() == b_bytes_before
+    assert progress.read_state(b_path) == progress.init_state("course-b", "1.0.0")
+
+    # A really did advance — the isolation isn't because nothing happened.
+    assert progress.read_state(a_path)["current_phase"] == "skeletons"
